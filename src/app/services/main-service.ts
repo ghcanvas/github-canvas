@@ -13,7 +13,7 @@ export interface User {
 export class MainService {
   private readonly usersUrl = 'https://jsonplaceholder.typicode.com/users';
 
-  //test
+  //test2
 
   // state holder
   private readonly usersSubject = new BehaviorSubject<User[]>([]);
