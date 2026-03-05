@@ -33,6 +33,11 @@ jobs:
       - name: Build
         run: npm run build -- --base-href /github-canvas/
 
+      # SPA fallback for GitHub Pages (fixes refresh/deep-link 404s)
+      # This creates 404.html in the same folder as index.html at deploy time.
+      - name: SPA fallback (404.html)
+        run: cp dist/github-canvas/browser/index.html dist/github-canvas/browser/404.html
+
       # IMPORTANT: upload the folder that contains index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
