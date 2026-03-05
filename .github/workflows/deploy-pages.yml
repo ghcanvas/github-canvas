@@ -31,7 +31,7 @@ jobs:
 
       # IMPORTANT: base-href for project pages is /<repo-name>/
       - name: Build
-        run: npm run build -- --base-href /github-canvas/
+        run: npm run build -- --base-href /
 
       # SPA fallback for GitHub Pages (fixes refresh/deep-link 404s)
       # This creates 404.html in the same folder as index.html at deploy time.
