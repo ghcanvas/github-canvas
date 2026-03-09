@@ -244,6 +244,57 @@ p {
   color: var(--muted);
 }
 
+.text-tools {
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.text-tools label {
+  display: block;
+  color: var(--text);
+  font-size: 1.95rem;
+  line-height: 1.2;
+  margin-bottom: 0.35rem;
+}
+
+.text-input-row {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.text-input-row input {
+  flex: 1;
+  border: 0;
+  border-bottom: 2px solid #8b949e80;
+  background: transparent;
+  color: var(--text);
+  font-size: 2.2rem;
+  padding: 0.15rem 0.1rem;
+  outline: none;
+  text-transform: uppercase;
+}
+
+.text-input-row input:focus {
+  border-bottom-color: #1f6feb;
+}
+
+.preview-btn {
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+
+.text-hint {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
 .sign-in-btn {
   border: 1px solid var(--panel-border);
   background: transparent;
@@ -305,5 +356,19 @@ p {
     justify-self: auto;
     align-self: flex-start;
     margin-top: 0;
+  }
+
+  .text-tools label {
+    font-size: 1.35rem;
+  }
+
+  .text-input-row {
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .text-input-row input {
+    font-size: 1.4rem;
+    min-width: 220px;
   }
 }

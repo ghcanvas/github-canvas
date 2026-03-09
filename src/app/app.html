@@ -27,7 +27,11 @@
             <span>Sat</span>
           </div>
 
-          <div class="week-track" role="grid" [attr.aria-label]="'Contribution grid for ' + selectedYear">
+          <div
+            class="week-track"
+            role="grid"
+            [attr.aria-label]="'Contribution grid for ' + selectedYear"
+          >
             <div class="week-column" *ngFor="let week of weeks; trackBy: trackByWeek">
               <button
                 *ngFor="let cell of week; trackBy: trackByDay"
@@ -47,17 +51,42 @@
       </section>
 
       <div class="clear-actions">
-        <button *ngIf="!showClearConfirm" type="button" class="clear-btn" (click)="requestClearYear()">
+        <button
+          *ngIf="!showClearConfirm"
+          type="button"
+          class="clear-btn"
+          (click)="requestClearYear()"
+        >
           Clear
         </button>
 
         <div *ngIf="showClearConfirm" class="clear-confirm">
           <span>Clear {{ selectedYear }}?</span>
           <div class="confirm-buttons">
-            <button type="button" class="confirm-btn is-yes" (click)="confirmClearYear()">Yes</button>
+            <button type="button" class="confirm-btn is-yes" (click)="confirmClearYear()">
+              Yes
+            </button>
             <button type="button" class="confirm-btn is-no" (click)="cancelClearYear()">No</button>
           </div>
         </div>
+      </div>
+
+      <div class="text-tools">
+        <label for="text-preview">Type Text:</label>
+        <div class="text-input-row">
+          <input
+            #textPreview
+            id="text-preview"
+            type="text"
+            [value]="textInput"
+            (input)="onTextInput(textPreview.value)"
+            placeholder="CODING IS COOL!"
+            spellcheck="false"
+            autocomplete="off"
+          />
+          <button type="button" class="preview-btn" (click)="renderTextPreview()">Preview</button>
+        </div>
+        <p class="text-hint">A-Z, space, !, ? only · {{ textColumnsHint }}</p>
       </div>
     </section>
 
@@ -72,6 +101,5 @@
         {{ year }}
       </button>
     </nav>
-
   </section>
 </main>
