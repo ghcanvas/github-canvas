@@ -11,6 +11,8 @@
   --year-btn: transparent;
   --year-btn-active: #1f6feb;
   --year-btn-active-text: #ffffff;
+  --rail-width: 78px;
+  --rail-gap: 0.5rem;
 
   display: block;
   min-height: 100vh;
@@ -32,21 +34,25 @@
 }
 
 .canvas-card {
-  width: min(1320px, 100%);
+  width: min(1040px, 100%);
   margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--rail-width);
+  column-gap: var(--rail-gap);
+  row-gap: 0.45rem;
   border: 1px solid var(--panel-border);
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(13, 20, 32, 0.97), rgba(13, 17, 23, 0.99));
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
   padding: 1rem 1rem 1.15rem;
-  min-height: 305px;
 }
 
 .canvas-header {
+  grid-column: 1 / -1;
   display: flex;
-  justify-content: flex-start;
-  gap: 1rem;
-  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--rail-gap);
+  align-items: center;
 }
 
 h1 {
@@ -60,20 +66,20 @@ p {
   color: var(--muted);
 }
 
-.canvas-body {
-  margin-top: 0.85rem;
+.left-panel {
+  grid-column: 1;
+  grid-row: 2;
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  flex-direction: column;
 }
 
 .year-nav {
+  grid-column: 2;
+  grid-row: 2;
   display: flex;
   flex-direction: column;
   flex-wrap: nowrap;
-  gap: 0.4rem;
-  min-width: 84px;
-  padding-top: 0.15rem;
+  gap: 0.3rem;
 }
 
 .year-btn {
@@ -81,8 +87,8 @@ p {
   background: var(--year-btn);
   color: var(--text);
   border-radius: 6px;
-  padding: 0.3rem 0.55rem;
-  font-size: 0.86rem;
+  padding: 0.26rem 0.5rem;
+  font-size: 0.82rem;
   cursor: pointer;
   text-align: left;
 }
@@ -94,9 +100,6 @@ p {
 }
 
 .grid-shell {
-  flex: 0 1 auto;
-  width: max-content;
-  max-width: 100%;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   padding: 0.58rem 0.62rem 0.62rem;
@@ -110,7 +113,7 @@ p {
   grid-template-columns: repeat(53, 12px);
   column-gap: 4px;
   margin-left: 38px;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   min-width: max-content;
 }
 
@@ -124,7 +127,7 @@ p {
 .grid-layout {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
+  gap: 6px;
   min-width: max-content;
 }
 
@@ -181,11 +184,12 @@ p {
 }
 
 .clear-actions {
-  margin-top: 0.4rem;
+  align-self: flex-end;
+  margin-top: 0.32rem;
 }
 
 .clear-btn {
-  width: 100%;
+  min-width: 64px;
   border: 1px solid #8b949e44;
   background: transparent;
   color: var(--muted);
@@ -240,6 +244,20 @@ p {
   color: var(--muted);
 }
 
+.sign-in-btn {
+  border: 1px solid var(--panel-border);
+  background: transparent;
+  color: var(--text);
+  border-radius: 4px;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.sign-in-btn:hover {
+  border-color: #8b949e;
+}
+
 @media (max-width: 900px) {
   .canvas-page {
     padding: 0.8rem;
@@ -254,18 +272,38 @@ p {
     width: 100%;
   }
 
-  .canvas-body {
-    flex-direction: column;
+  .canvas-card {
+    grid-template-columns: 1fr;
+    row-gap: 0.55rem;
+  }
+
+  .canvas-header {
+    grid-column: 1;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .left-panel {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .grid-shell {
+    width: 100%;
+    padding: 0.6rem;
   }
 
   .year-nav {
+    grid-column: 1;
+    grid-row: 3;
     flex-direction: row;
     flex-wrap: wrap;
     min-width: 0;
-    padding-top: 0;
   }
 
   .clear-actions {
+    justify-self: auto;
+    align-self: flex-start;
     margin-top: 0;
   }
 }

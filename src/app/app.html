@@ -5,9 +5,10 @@
         <h1>GitHubCanvas.com</h1>
         <p>{{ activeCount }} active pixels in {{ selectedYear }}</p>
       </div>
+      <button type="button" class="sign-in-btn">Sign In</button>
     </header>
 
-    <section class="canvas-body">
+    <section class="left-panel">
       <section class="grid-shell" aria-label="Contribution canvas">
         <div class="month-track" aria-hidden="true">
           <span class="month-cell" *ngFor="let label of monthLabels; trackBy: trackByWeek">{{
@@ -26,11 +27,7 @@
             <span>Sat</span>
           </div>
 
-          <div
-            class="week-track"
-            role="grid"
-            [attr.aria-label]="'Contribution grid for ' + selectedYear"
-          >
+          <div class="week-track" role="grid" [attr.aria-label]="'Contribution grid for ' + selectedYear">
             <div class="week-column" *ngFor="let week of weeks; trackBy: trackByWeek">
               <button
                 *ngFor="let cell of week; trackBy: trackByDay"
@@ -49,40 +46,32 @@
         </div>
       </section>
 
-      <nav class="year-nav" aria-label="Select year">
-        <button
-          *ngFor="let year of years; trackBy: trackByWeek"
-          type="button"
-          class="year-btn"
-          [class.is-selected]="isYearSelected(year)"
-          (click)="selectYear(year)"
-        >
-          {{ year }}
+      <div class="clear-actions">
+        <button *ngIf="!showClearConfirm" type="button" class="clear-btn" (click)="requestClearYear()">
+          Clear
         </button>
 
-        <div class="clear-actions">
-          <button
-            *ngIf="!showClearConfirm"
-            type="button"
-            class="clear-btn"
-            (click)="requestClearYear()"
-          >
-            Clear
-          </button>
-
-          <div *ngIf="showClearConfirm" class="clear-confirm">
-            <span>Clear {{ selectedYear }}?</span>
-            <div class="confirm-buttons">
-              <button type="button" class="confirm-btn is-yes" (click)="confirmClearYear()">
-                Yes
-              </button>
-              <button type="button" class="confirm-btn is-no" (click)="cancelClearYear()">
-                No
-              </button>
-            </div>
+        <div *ngIf="showClearConfirm" class="clear-confirm">
+          <span>Clear {{ selectedYear }}?</span>
+          <div class="confirm-buttons">
+            <button type="button" class="confirm-btn is-yes" (click)="confirmClearYear()">Yes</button>
+            <button type="button" class="confirm-btn is-no" (click)="cancelClearYear()">No</button>
           </div>
         </div>
-      </nav>
+      </div>
     </section>
+
+    <nav class="year-nav" aria-label="Select year">
+      <button
+        *ngFor="let year of years; trackBy: trackByWeek"
+        type="button"
+        class="year-btn"
+        [class.is-selected]="isYearSelected(year)"
+        (click)="selectYear(year)"
+      >
+        {{ year }}
+      </button>
+    </nav>
+
   </section>
 </main>
