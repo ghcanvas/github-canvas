@@ -1,5 +1,6 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
+import { MainService, AuthUser } from './services/main-service';
 
 interface ContributionCell {
   date: Date;
@@ -15,7 +16,7 @@ interface ContributionCell {
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
+export class App implements OnInit {
   private static readonly WEEKS = 53;
   private static readonly DAYS = 7;
   private static readonly STORAGE_PREFIX = 'github-canvas-year:';
@@ -63,13 +64,21 @@ export class App {
 
   textInput = 'CODING IS COOL!';
 
+  currentUser: AuthUser | null = null;
+
   private isPainting = false;
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
 
-  constructor() {
+  constructor(public readonly mainService: MainService) {
     this.selectYear(this.selectedYear);
     this.textInput = this.clampTextToYear(this.sanitizeText(this.textInput));
+  }
+
+  ngOnInit(): void {
+    this.mainService.loadCurrentUser().subscribe((user) => {
+      this.currentUser = user;
+    });
   }
 
   get activeCount(): number {
@@ -81,6 +90,22 @@ export class App {
     const used = this.measureTextColumns(this.textInput);
     const max = this.getYearRenderableColumns();
     return `${used}/${max} columns`;
+  }
+
+  get headerTitle(): string {
+    return this.currentUser ? `Welcome ${this.currentUser.login}` : 'GitHubCanvas.com';
+  }
+
+  get headerAvatarSrc(): string {
+    return this.currentUser?.avatarUrl ?? '/github-canvas-avatar.jpg';
+  }
+
+  get headerAvatarAlt(): string {
+    return this.currentUser ? `${this.currentUser.login} avatar` : 'GitHub Canvas Avatar';
+  }
+
+  signIn(): void {
+    this.mainService.loginWithGitHub();
   }
 
   selectYear(year: number): void {

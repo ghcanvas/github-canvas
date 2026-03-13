@@ -1,30 +1,39 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, of, tap } from 'rxjs';
 
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  address?: { city?: string };
+export interface AuthUser {
+  login: string;
+  id: string;
+  avatarUrl: string;
+  sessionId: string;
+  createdAt: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
-  private readonly usersUrl = 'https://jsonplaceholder.typicode.com/users';
+  private readonly apiBase = 'https://ue0ytmluui.execute-api.us-east-2.amazonaws.com';
 
-  //test5
-
-  // state holder
-  private readonly usersSubject = new BehaviorSubject<User[]>([]);
-
-  // public stream
-  readonly users$: Observable<User[]> = this.usersSubject.asObservable();
+  private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
+  readonly currentUser$: Observable<AuthUser | null> = this.currentUserSubject.asObservable();
 
   constructor(private http: HttpClient) {}
 
-  // fetch + push into subject
-  loadUsers(): Observable<User[]> {
-    return this.http.get<User[]>(this.usersUrl).pipe(tap((users) => this.usersSubject.next(users)));
+  loginWithGitHub(): void {
+    window.location.href = `${this.apiBase}/auth/github/login`;
+  }
+
+  loadCurrentUser(): Observable<AuthUser | null> {
+    return this.http.get<AuthUser>(`${this.apiBase}/auth/me`, { withCredentials: true }).pipe(
+      tap((user) => this.currentUserSubject.next(user)),
+      catchError(() => {
+        this.currentUserSubject.next(null);
+        return of(null);
+      }),
+    );
+  }
+
+  getCurrentUserSnapshot(): AuthUser | null {
+    return this.currentUserSubject.value;
   }
 }

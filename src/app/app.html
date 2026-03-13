@@ -2,13 +2,29 @@
   <section class="canvas-card">
     <header class="canvas-header">
       <div class="brand-block">
-        <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas Avatar" class="brand-avatar" />
+        <img [src]="headerAvatarSrc" [alt]="headerAvatarAlt" class="brand-avatar" />
         <div>
-          <h1>GitHubCanvas.com</h1>
+          <h1>{{ headerTitle }}</h1>
           <p>{{ activeCount }} active pixels in {{ selectedYear }}</p>
         </div>
       </div>
-      <button type="button" class="sign-in-btn">Sign In</button>
+
+      <button *ngIf="!currentUser" type="button" class="sign-in-btn" (click)="signIn()">
+        Sign In
+      </button>
+
+      <div
+        *ngIf="currentUser"
+        class="user-chip"
+        [attr.aria-label]="'Signed in as ' + currentUser.login"
+      >
+        <img
+          [src]="currentUser.avatarUrl"
+          [alt]="currentUser.login + ' avatar'"
+          class="user-chip-avatar"
+        />
+        <span>{{ currentUser.login }}</span>
+      </div>
     </header>
 
     <section class="left-panel">
