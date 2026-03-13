@@ -2,37 +2,42 @@
   <section class="canvas-card">
     <header class="canvas-header">
       <div class="brand-block">
-        <img [src]="headerAvatarSrc" [alt]="headerAvatarAlt" class="brand-avatar" />
+        <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas Avatar" class="brand-avatar" />
         <div>
           <h1>{{ headerTitle }}</h1>
           <p>{{ activeCount }} active pixels in {{ selectedYear }}</p>
         </div>
       </div>
 
-      <button *ngIf="!currentUser" type="button" class="sign-in-btn" (click)="signIn()">
-        Sign In
-      </button>
-
-      <div class="user-menu" *ngIf="currentUser">
+      <div class="auth-block">
         <button
+          *ngIf="!currentUser"
           type="button"
-          class="user-chip user-chip-button"
-          (click)="toggleUserMenu($event)"
-          [attr.aria-expanded]="showUserMenu"
-          aria-haspopup="menu"
+          class="sign-in-btn"
+          [disabled]="showAuthSpinner"
+          (click)="signIn()"
         >
-          <img
-            [src]="currentUser.avatarUrl"
-            [alt]="currentUser.login + ' avatar'"
-            class="user-chip-avatar"
-          />
-          <span>{{ currentUser.login }}</span>
+          <span *ngIf="!showAuthSpinner">Sign In</span>
+          <span *ngIf="showAuthSpinner" class="btn-spinner"></span>
         </button>
 
-        <div class="user-dropdown" *ngIf="showUserMenu" role="menu">
-          <button type="button" class="user-dropdown-item" (click)="logOut()" role="menuitem">
-            Log out
+        <div *ngIf="currentUser" class="user-menu-wrap">
+          <button
+            type="button"
+            class="user-pill"
+            [disabled]="showAuthSpinner"
+            (click)="toggleUserMenu($event)"
+            [attr.aria-expanded]="showUserMenu"
+            aria-haspopup="menu"
+          >
+            <img [src]="menuAvatarSrc" [alt]="menuAvatarAlt" class="user-pill-avatar" />
+            <span *ngIf="showAuthSpinner" class="btn-spinner small"></span>
           </button>
+
+          <div *ngIf="showUserMenu" class="user-dropdown" (click)="$event.stopPropagation()">
+            <div class="user-dropdown-label">{{ currentUser.login }}</div>
+            <button type="button" class="dropdown-item danger" (click)="logOut()">Log Out</button>
+          </div>
         </div>
       </div>
     </header>

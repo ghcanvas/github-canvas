@@ -67,6 +67,10 @@ export class App implements OnInit {
   currentUser: AuthUser | null = null;
   showUserMenu = false;
 
+  isCheckingAuth = true;
+  isSigningIn = false;
+  isLoggingOut = false;
+
   private isPainting = false;
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
@@ -77,9 +81,14 @@ export class App implements OnInit {
   }
 
   ngOnInit(): void {
-    this.mainService.loadCurrentUser().subscribe((user) => {
+    this.mainService.currentUser$.subscribe((user) => {
       this.currentUser = user;
+      this.isCheckingAuth = false;
+      this.isSigningIn = false;
+      this.isLoggingOut = false;
     });
+
+    this.refreshAuth();
   }
 
   get activeCount(): number {
@@ -97,32 +106,62 @@ export class App implements OnInit {
     return this.currentUser ? `Welcome ${this.currentUser.login}` : 'GitHubCanvas.com';
   }
 
-  get headerAvatarSrc(): string {
+  get menuAvatarSrc(): string {
     return this.currentUser?.avatarUrl ?? '/github-canvas-avatar.jpg';
   }
 
-  get headerAvatarAlt(): string {
-    return this.currentUser ? `${this.currentUser.login} avatar` : 'GitHub Canvas Avatar';
+  get menuAvatarAlt(): string {
+    return this.currentUser ? `${this.currentUser.login} avatar` : 'User avatar';
+  }
+
+  get showAuthSpinner(): boolean {
+    return this.isCheckingAuth || this.isSigningIn || this.isLoggingOut;
   }
 
   signIn(): void {
+    if (this.showAuthSpinner) {
+      return;
+    }
+
+    this.showUserMenu = false;
+    this.isSigningIn = true;
     this.mainService.loginWithGitHub();
   }
 
   toggleUserMenu(event: MouseEvent): void {
     event.stopPropagation();
+
+    if (!this.currentUser || this.showAuthSpinner) {
+      return;
+    }
+
     this.showUserMenu = !this.showUserMenu;
   }
 
   logOut(): void {
+    if (this.showAuthSpinner) {
+      return;
+    }
+
     this.showUserMenu = false;
     this.currentUser = null;
+    this.isLoggingOut = true;
     this.mainService.logOut();
   }
 
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showUserMenu = false;
+  }
+
+  @HostListener('window:pageshow')
+  onPageShow(): void {
+    this.refreshAuthSilently();
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus(): void {
+    this.refreshAuthSilently();
   }
 
   selectYear(year: number): void {
@@ -219,6 +258,26 @@ export class App implements OnInit {
 
   trackByDay(index: number): number {
     return index;
+  }
+
+  private refreshAuth(): void {
+    this.isCheckingAuth = true;
+    this.mainService.loadCurrentUser().subscribe({
+      next: () => {
+        this.isCheckingAuth = false;
+      },
+      error: () => {
+        this.isCheckingAuth = false;
+      },
+    });
+  }
+
+  private refreshAuthSilently(): void {
+    if (this.isSigningIn || this.isLoggingOut) {
+      return;
+    }
+
+    this.mainService.loadCurrentUser().subscribe();
   }
 
   private sanitizeText(raw: string): string {
