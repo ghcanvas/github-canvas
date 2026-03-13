@@ -36,4 +36,9 @@ export class MainService {
   getCurrentUserSnapshot(): AuthUser | null {
     return this.currentUserSubject.value;
   }
+
+  logOut(): void {
+    this.currentUserSubject.next(null);
+    window.location.href = `${this.apiBase}/auth/logout`;
+  }
 }

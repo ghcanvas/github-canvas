@@ -327,6 +327,10 @@ p {
   border-color: #8b949e;
 }
 
+.user-menu {
+  position: relative;
+}
+
 .user-chip {
   display: inline-flex;
   align-items: center;
@@ -337,6 +341,14 @@ p {
   border-radius: 999px;
   padding: 0.28rem 0.5rem 0.28rem 0.32rem;
   min-height: 36px;
+}
+
+.user-chip-button {
+  cursor: pointer;
+}
+
+.user-chip-button:hover {
+  border-color: #8b949e;
 }
 
 .user-chip-avatar {
@@ -350,6 +362,35 @@ p {
 .user-chip span {
   font-size: 0.86rem;
   line-height: 1;
+}
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  min-width: 140px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: #0d1117;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  padding: 0.35rem;
+  z-index: 50;
+}
+
+.user-dropdown-item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  font-size: 0.86rem;
+}
+
+.user-dropdown-item:hover {
+  background: rgba(31, 111, 235, 0.12);
 }
 
 @media (max-width: 900px) {

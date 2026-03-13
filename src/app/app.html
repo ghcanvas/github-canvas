@@ -13,17 +13,27 @@
         Sign In
       </button>
 
-      <div
-        *ngIf="currentUser"
-        class="user-chip"
-        [attr.aria-label]="'Signed in as ' + currentUser.login"
-      >
-        <img
-          [src]="currentUser.avatarUrl"
-          [alt]="currentUser.login + ' avatar'"
-          class="user-chip-avatar"
-        />
-        <span>{{ currentUser.login }}</span>
+      <div class="user-menu" *ngIf="currentUser">
+        <button
+          type="button"
+          class="user-chip user-chip-button"
+          (click)="toggleUserMenu($event)"
+          [attr.aria-expanded]="showUserMenu"
+          aria-haspopup="menu"
+        >
+          <img
+            [src]="currentUser.avatarUrl"
+            [alt]="currentUser.login + ' avatar'"
+            class="user-chip-avatar"
+          />
+          <span>{{ currentUser.login }}</span>
+        </button>
+
+        <div class="user-dropdown" *ngIf="showUserMenu" role="menu">
+          <button type="button" class="user-dropdown-item" (click)="logOut()" role="menuitem">
+            Log out
+          </button>
+        </div>
       </div>
     </header>
 

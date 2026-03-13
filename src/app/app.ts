@@ -65,6 +65,7 @@ export class App implements OnInit {
   textInput = 'CODING IS COOL!';
 
   currentUser: AuthUser | null = null;
+  showUserMenu = false;
 
   private isPainting = false;
   private paintValue: boolean | null = null;
@@ -106,6 +107,22 @@ export class App implements OnInit {
 
   signIn(): void {
     this.mainService.loginWithGitHub();
+  }
+
+  toggleUserMenu(event: MouseEvent): void {
+    event.stopPropagation();
+    this.showUserMenu = !this.showUserMenu;
+  }
+
+  logOut(): void {
+    this.showUserMenu = false;
+    this.currentUser = null;
+    this.mainService.logOut();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    this.showUserMenu = false;
   }
 
   selectYear(year: number): void {
