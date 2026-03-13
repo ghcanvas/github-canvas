@@ -61,6 +61,7 @@ export class App implements OnInit {
   monthLabels: string[] = [];
   weeks: ContributionCell[][] = [];
   showClearConfirm = false;
+  showBrandModal = false;
 
   textInput = 'CODING IS COOL!';
 
@@ -152,6 +153,12 @@ export class App implements OnInit {
   @HostListener('document:click')
   onDocumentClick(): void {
     this.showUserMenu = false;
+  }
+
+  @HostListener('window:keydown.escape')
+  onEscape(): void {
+    this.showUserMenu = false;
+    this.showBrandModal = false;
   }
 
   @HostListener('window:pageshow')
@@ -246,6 +253,15 @@ export class App implements OnInit {
   @HostListener('window:blur')
   onWindowBlur(): void {
     this.endPainting();
+  }
+
+  openBrandModal(event?: MouseEvent): void {
+    event?.stopPropagation();
+    this.showBrandModal = true;
+  }
+
+  closeBrandModal(): void {
+    this.showBrandModal = false;
   }
 
   isYearSelected(year: number): boolean {

@@ -2,7 +2,9 @@
   <section class="canvas-card">
     <header class="canvas-header">
       <div class="brand-block">
-        <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas Avatar" class="brand-avatar" />
+        <button type="button" class="brand-avatar-btn" (click)="openBrandModal($event)">
+          <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas Avatar" class="brand-avatar" />
+        </button>
         <div>
           <h1>{{ headerTitle }}</h1>
           <p>{{ activeCount }} active pixels in {{ selectedYear }}</p>
@@ -137,3 +139,13 @@
     </nav>
   </section>
 </main>
+
+<div *ngIf="showBrandModal" class="brand-modal-backdrop" (click)="closeBrandModal()">
+  <div class="brand-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="brand-modal-close" aria-label="Close" (click)="closeBrandModal()">
+      x
+    </button>
+    <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas" class="brand-modal-image" />
+    <p class="brand-modal-caption">Use your GitHub contribution timeline as an art canvas.</p>
+  </div>
+</div>

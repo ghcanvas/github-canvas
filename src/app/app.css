@@ -61,6 +61,14 @@
   gap: 0.72rem;
 }
 
+.brand-avatar-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 50%;
+}
+
 .brand-avatar {
   width: 60px;
   height: 60px;
@@ -71,6 +79,11 @@
   box-shadow:
     0 0 0 2px rgba(13, 17, 23, 0.9),
     0 0 18px rgba(46, 160, 67, 0.35);
+}
+
+.brand-avatar-btn:focus-visible {
+  outline: 2px solid #1f6feb;
+  outline-offset: 2px;
 }
 
 h1 {
@@ -422,6 +435,54 @@ p {
   border-radius: 50%;
   display: inline-block;
   animation: spin 0.8s linear infinite;
+}
+
+.brand-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.brand-modal {
+  position: relative;
+  width: min(640px, 100%);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  padding: 0.9rem;
+  background: #0d1117;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
+}
+
+.brand-modal-image {
+  width: 100%;
+  max-height: 72vh;
+  border-radius: 10px;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-modal-caption {
+  margin: 0.65rem 0 0;
+  font-size: 1rem;
+  color: #d0d7de;
+}
+
+.brand-modal-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(13, 17, 23, 0.85);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .btn-spinner.small {
