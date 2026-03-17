@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
 import { MainService, AuthUser } from './services/main-service';
 
@@ -76,7 +76,10 @@ export class App implements OnInit {
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
 
-  constructor(public readonly mainService: MainService) {
+  constructor(
+    public readonly mainService: MainService,
+    private readonly changeDetectorRef: ChangeDetectorRef,
+  ) {
     this.selectYear(this.selectedYear);
     this.textInput = this.clampTextToYear(this.sanitizeText(this.textInput));
   }
@@ -87,6 +90,7 @@ export class App implements OnInit {
       this.isCheckingAuth = false;
       this.isSigningIn = false;
       this.isLoggingOut = false;
+      this.changeDetectorRef.detectChanges();
     });
 
     this.refreshAuth();
@@ -281,9 +285,11 @@ export class App implements OnInit {
     this.mainService.loadCurrentUser().subscribe({
       next: () => {
         this.isCheckingAuth = false;
+        this.changeDetectorRef.detectChanges();
       },
       error: () => {
         this.isCheckingAuth = false;
+        this.changeDetectorRef.detectChanges();
       },
     });
   }
