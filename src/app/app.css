@@ -229,6 +229,8 @@ p {
 .clear-actions {
   align-self: flex-end;
   margin-top: 0.32rem;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .clear-btn {
@@ -555,9 +557,10 @@ p {
   }
 
   .clear-actions {
+    width: 100%;
     justify-self: auto;
-    align-self: flex-start;
-    margin-top: 0;
+    align-self: stretch;
+    margin-top: 0.35rem;
   }
 
   .text-tools label {
