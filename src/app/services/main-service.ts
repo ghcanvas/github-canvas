@@ -12,7 +12,7 @@ export interface AuthUser {
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
-  private readonly apiBase = 'https://ue0ytmluui.execute-api.us-east-2.amazonaws.com';
+  private readonly apiBase = 'https://api.githubcanvas.com';
 
   private readonly currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
   readonly currentUser$: Observable<AuthUser | null> = this.currentUserSubject.asObservable();
