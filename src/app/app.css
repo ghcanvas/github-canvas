@@ -121,6 +121,25 @@ p {
   flex-direction: column;
   flex-wrap: nowrap;
   gap: 0.3rem;
+  align-items: stretch;
+  align-self: center;
+  justify-self: end;
+  width: 5rem;
+  padding: 0.2rem 0;
+}
+
+.year-step-btn {
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  border-radius: 999px;
+  width: 2rem;
+  height: 2rem;
+  margin: 0 auto;
+  padding: 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+  line-height: 1;
 }
 
 .year-btn {
@@ -131,13 +150,26 @@ p {
   padding: 0.26rem 0.5rem;
   font-size: 0.82rem;
   cursor: pointer;
-  text-align: left;
+  text-align: center;
+  min-height: 2rem;
 }
 
 .year-btn.is-selected {
   background: var(--year-btn-active);
   color: var(--year-btn-active-text);
   border-color: transparent;
+  transform: scale(1.03);
+}
+
+.year-step-btn:hover,
+.year-btn:hover {
+  border-color: rgba(240, 246, 252, 0.3);
+}
+
+.year-step-btn:focus-visible,
+.year-btn:focus-visible {
+  outline: 2px solid rgba(31, 111, 235, 0.55);
+  outline-offset: 2px;
 }
 
 .grid-shell {
@@ -231,6 +263,13 @@ p {
   margin-top: 0.32rem;
   display: flex;
   justify-content: flex-end;
+}
+
+.clear-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
 }
 
 .clear-btn {
@@ -551,9 +590,8 @@ p {
   .year-nav {
     grid-column: 1;
     grid-row: 3;
-    flex-direction: row;
-    flex-wrap: wrap;
-    min-width: 0;
+    justify-self: center;
+    width: min(100%, 5rem);
   }
 
   .clear-actions {

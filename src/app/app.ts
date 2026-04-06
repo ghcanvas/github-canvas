@@ -19,6 +19,7 @@ interface ContributionCell {
 export class App implements OnInit {
   private static readonly WEEKS = 53;
   private static readonly DAYS = 7;
+  private static readonly YEAR_WINDOW_RADIUS = 2;
   private static readonly STORAGE_PREFIX = 'github-canvas-year:';
   private static readonly TEXT_PREFIX = 'github-canvas-text-year:';
 
@@ -55,7 +56,6 @@ export class App implements OnInit {
   };
 
   readonly today = new Date();
-  readonly years = this.buildYearRange(10);
 
   selectedYear = this.today.getFullYear();
   monthLabels: string[] = [];
@@ -123,6 +123,10 @@ export class App implements OnInit {
     return this.isCheckingAuth || this.isSigningIn || this.isLoggingOut;
   }
 
+  get visibleYears(): number[] {
+    return this.buildYearWindow(this.selectedYear);
+  }
+
   signIn(): void {
     if (this.showAuthSpinner) {
       return;
@@ -188,6 +192,18 @@ export class App implements OnInit {
     this.weeks = this.buildWeeks(firstGridDay, year, selected);
     const savedText = this.loadYearText(year);
     this.textInput = this.clampTextToYear(this.sanitizeText(savedText));
+  }
+
+  selectPreviousYear(): void {
+    this.selectYear(this.selectedYear - 1);
+  }
+
+  selectNextYear(): void {
+    this.selectYear(this.selectedYear + 1);
+  }
+
+  selectCurrentYear(): void {
+    this.selectYear(this.today.getFullYear());
   }
 
   toggleCell(cell: ContributionCell): void {
@@ -270,6 +286,10 @@ export class App implements OnInit {
 
   isYearSelected(year: number): boolean {
     return this.selectedYear === year;
+  }
+
+  trackByYear(_index: number, year: number): number {
+    return year;
   }
 
   trackByWeek(index: number): number {
@@ -463,9 +483,12 @@ export class App implements OnInit {
     this.hasPendingPaintChanges = false;
   }
 
-  private buildYearRange(totalYears: number): number[] {
-    const currentYear = this.today.getFullYear();
-    return Array.from({ length: totalYears }, (_, index) => currentYear - index);
+  private buildYearWindow(centerYear: number): number[] {
+    const totalYears = App.YEAR_WINDOW_RADIUS * 2 + 1;
+    return Array.from(
+      { length: totalYears },
+      (_, index) => centerYear + App.YEAR_WINDOW_RADIUS - index,
+    );
   }
 
   private startOfWeek(date: Date): Date {
