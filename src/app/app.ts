@@ -91,6 +91,31 @@ export class App implements OnInit {
       this.isSigningIn = false;
       this.isLoggingOut = false;
       this.changeDetectorRef.detectChanges();
+
+      //test
+
+      fetch('https://api.githubcanvas.com/plan/2026', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          activeIsos: ['2026-01-05', '2026-01-06', '2026-01-07'],
+          text: 'TEST PLAN',
+        }),
+      })
+        .then((r) => r.json())
+        .then(console.log);
+
+      fetch('https://api.githubcanvas.com/plan/2026', {
+        method: 'GET',
+        credentials: 'include',
+      })
+        .then((r) => r.json())
+        .then(console.log);
+
+      //end test
     });
 
     this.refreshAuth();
