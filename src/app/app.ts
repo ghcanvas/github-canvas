@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
-import { MainService, AuthUser } from './services/main-service';
+import { MainService, AuthUser, UserPlan } from './services/main-service';
 
 interface ContributionCell {
   date: Date;
@@ -71,10 +71,14 @@ export class App implements OnInit {
   isCheckingAuth = true;
   isSigningIn = false;
   isLoggingOut = false;
+  isLoadingPlan = false;
+  isSavingPlan = false;
+  planStatusMessage = '';
 
   private isPainting = false;
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
+  private planLoadRequestId = 0;
 
   constructor(
     public readonly mainService: MainService,
@@ -90,32 +94,9 @@ export class App implements OnInit {
       this.isCheckingAuth = false;
       this.isSigningIn = false;
       this.isLoggingOut = false;
+      this.hydrateYearFromLocal(this.selectedYear);
+      this.loadPlanForYear(this.selectedYear);
       this.changeDetectorRef.detectChanges();
-
-      //test
-
-      fetch('https://api.githubcanvas.com/plan/2026', {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          activeIsos: ['2026-01-05', '2026-01-06', '2026-01-07'],
-          text: 'TEST PLAN',
-        }),
-      })
-        .then((r) => r.json())
-        .then(console.log);
-
-      fetch('https://api.githubcanvas.com/plan/2026', {
-        method: 'GET',
-        credentials: 'include',
-      })
-        .then((r) => r.json())
-        .then(console.log);
-
-      //end test
     });
 
     this.refreshAuth();
@@ -150,6 +131,14 @@ export class App implements OnInit {
 
   get visibleYears(): number[] {
     return this.buildYearWindow(this.selectedYear);
+  }
+
+  get saveButtonLabel(): string {
+    if (this.isSavingPlan) {
+      return 'Saving...';
+    }
+
+    return 'Save';
   }
 
   signIn(): void {
@@ -208,15 +197,9 @@ export class App implements OnInit {
     this.endPainting();
     this.selectedYear = year;
     this.showClearConfirm = false;
-    const selected = this.loadYearSelection(year);
-
-    const firstDayOfYear = new Date(year, 0, 1);
-    const firstGridDay = this.startOfWeek(firstDayOfYear);
-
-    this.monthLabels = this.buildMonthLabels(year, firstGridDay);
-    this.weeks = this.buildWeeks(firstGridDay, year, selected);
-    const savedText = this.loadYearText(year);
-    this.textInput = this.clampTextToYear(this.sanitizeText(savedText));
+    this.planStatusMessage = '';
+    this.hydrateYearFromLocal(year);
+    this.loadPlanForYear(year);
   }
 
   selectPreviousYear(): void {
@@ -229,6 +212,43 @@ export class App implements OnInit {
 
   selectCurrentYear(): void {
     this.selectYear(this.today.getFullYear());
+  }
+
+  saveCurrentPlan(): void {
+    if (!this.currentUser || this.isSavingPlan) {
+      this.planStatusMessage = this.currentUser ? this.planStatusMessage : 'Sign in to save plans.';
+      return;
+    }
+
+    const year = this.selectedYear;
+    const activeIsos = this.getActiveIsos();
+    const text = this.textInput;
+
+    this.persistYearSelection(year);
+    this.persistYearText(year, text);
+    this.planStatusMessage = '';
+    this.isSavingPlan = true;
+
+    this.mainService.savePlan(year, { activeIsos, text }).subscribe({
+      next: (plan) => {
+        this.isSavingPlan = false;
+
+        if (!plan) {
+          this.planStatusMessage = `Save failed for ${year}.`;
+          this.changeDetectorRef.detectChanges();
+          return;
+        }
+
+        this.persistRemotePlanLocally(year, plan);
+        this.planStatusMessage = `Saved ${year}.`;
+        this.changeDetectorRef.detectChanges();
+      },
+      error: () => {
+        this.isSavingPlan = false;
+        this.planStatusMessage = `Save failed for ${year}.`;
+        this.changeDetectorRef.detectChanges();
+      },
+    });
   }
 
   toggleCell(cell: ContributionCell): void {
@@ -568,12 +588,7 @@ export class App implements OnInit {
   }
 
   private persistYearSelection(year: number): void {
-    const activeIsos = this.weeks
-      .flat()
-      .filter((cell) => cell.inYear && cell.active)
-      .map((cell) => cell.iso);
-
-    localStorage.setItem(`${App.STORAGE_PREFIX}${year}`, JSON.stringify(activeIsos));
+    localStorage.setItem(`${App.STORAGE_PREFIX}${year}`, JSON.stringify(this.getActiveIsos()));
   }
 
   private persistYearText(year: number, text: string): void {
@@ -601,5 +616,104 @@ export class App implements OnInit {
   private loadYearText(year: number): string {
     const raw = localStorage.getItem(`${App.TEXT_PREFIX}${year}`);
     return raw ?? this.textInput;
+  }
+
+  private hydrateYearFromLocal(year: number): void {
+    const selected = this.loadYearSelection(year);
+    const firstDayOfYear = new Date(year, 0, 1);
+    const firstGridDay = this.startOfWeek(firstDayOfYear);
+
+    this.monthLabels = this.buildMonthLabels(year, firstGridDay);
+    this.weeks = this.buildWeeks(firstGridDay, year, selected);
+    const savedText = this.loadYearText(year);
+    this.textInput = this.clampTextToYear(this.sanitizeText(savedText));
+  }
+
+  private loadPlanForYear(year: number): void {
+    if (!this.currentUser) {
+      this.isLoadingPlan = false;
+      this.planStatusMessage = '';
+      return;
+    }
+
+    const requestId = ++this.planLoadRequestId;
+    this.isLoadingPlan = true;
+    this.planStatusMessage = '';
+
+    this.mainService.loadPlan(year).subscribe({
+      next: (plan) => {
+        if (requestId !== this.planLoadRequestId || year !== this.selectedYear) {
+          return;
+        }
+
+        this.isLoadingPlan = false;
+
+        if (!plan) {
+          this.planStatusMessage = '';
+          this.changeDetectorRef.detectChanges();
+          return;
+        }
+
+        this.applyRemotePlan(year, plan);
+        this.planStatusMessage = `Loaded saved plan for ${year}.`;
+        this.changeDetectorRef.detectChanges();
+      },
+      error: () => {
+        if (requestId !== this.planLoadRequestId || year !== this.selectedYear) {
+          return;
+        }
+
+        this.isLoadingPlan = false;
+        this.planStatusMessage = '';
+        this.changeDetectorRef.detectChanges();
+      },
+    });
+  }
+
+  private applyRemotePlan(year: number, plan: UserPlan): void {
+    const activeIsos = this.normalizeActiveIsos(plan.activeIsos);
+    const text = this.clampTextToYear(this.sanitizeText(plan.text ?? ''));
+
+    this.setYearSelection(new Set(activeIsos));
+    this.textInput = text;
+    this.persistRemotePlanLocally(year, plan);
+  }
+
+  private persistRemotePlanLocally(year: number, plan: UserPlan): void {
+    const activeIsos = this.normalizeActiveIsos(plan.activeIsos);
+    localStorage.setItem(`${App.STORAGE_PREFIX}${year}`, JSON.stringify(activeIsos));
+    localStorage.setItem(`${App.TEXT_PREFIX}${year}`, this.sanitizeText(plan.text ?? ''));
+  }
+
+  private normalizeActiveIsos(value: string[] | string | null | undefined): string[] {
+    if (Array.isArray(value)) {
+      return value.filter((item): item is string => typeof item === 'string');
+    }
+
+    if (typeof value !== 'string') {
+      return [];
+    }
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed)
+        ? parsed.filter((item): item is string => typeof item === 'string')
+        : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private setYearSelection(selected: Set<string>): void {
+    for (const cell of this.weeks.flat()) {
+      cell.active = cell.inYear && selected.has(cell.iso);
+    }
+  }
+
+  private getActiveIsos(): string[] {
+    return this.weeks
+      .flat()
+      .filter((cell) => cell.inYear && cell.active)
+      .map((cell) => cell.iso);
   }
 }

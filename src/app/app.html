@@ -100,6 +100,15 @@
           <button type="button" class="clear-btn" (click)="selectCurrentYear()">
             Current Year
           </button>
+
+          <button
+            type="button"
+            class="save-btn"
+            [disabled]="!currentUser || isSavingPlan || isLoadingPlan"
+            (click)="saveCurrentPlan()"
+          >
+            {{ saveButtonLabel }}
+          </button>
         </div>
 
         <div *ngIf="showClearConfirm" class="clear-confirm">
@@ -112,6 +121,10 @@
           </div>
         </div>
       </div>
+
+      <p *ngIf="isLoadingPlan || planStatusMessage" class="plan-status">
+        {{ isLoadingPlan ? 'Loading saved plan...' : planStatusMessage }}
+      </p>
 
       <div class="text-tools">
         <label for="text-preview">Type Text:</label>

@@ -10,6 +10,23 @@ export interface AuthUser {
   createdAt: string;
 }
 
+export interface UserPlan {
+  githubUserId: string;
+  year: number;
+  activeIsos: string[] | string;
+  text?: string | null;
+  updatedAt?: string;
+}
+
+export interface SaveUserPlanRequest {
+  activeIsos: string[];
+  text: string;
+}
+
+export interface SaveUserPlanResponse extends UserPlan {
+  ok: boolean;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MainService {
   private readonly apiBase = 'https://api.githubcanvas.com';
@@ -35,6 +52,18 @@ export class MainService {
 
   getCurrentUserSnapshot(): AuthUser | null {
     return this.currentUserSubject.value;
+  }
+
+  loadPlan(year: number): Observable<UserPlan | null> {
+    return this.http
+      .get<UserPlan>(`${this.apiBase}/plan/${year}`, { withCredentials: true })
+      .pipe(catchError(() => of(null)));
+  }
+
+  savePlan(year: number, plan: SaveUserPlanRequest): Observable<SaveUserPlanResponse | null> {
+    return this.http
+      .put<SaveUserPlanResponse>(`${this.apiBase}/plan/${year}`, plan, { withCredentials: true })
+      .pipe(catchError(() => of(null)));
   }
 
   logOut(): void {

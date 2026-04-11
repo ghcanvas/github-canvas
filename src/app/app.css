@@ -263,6 +263,9 @@ p {
   margin-top: 0.32rem;
   display: flex;
   justify-content: flex-end;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
 }
 
 .clear-buttons {
@@ -284,9 +287,31 @@ p {
   text-align: center;
 }
 
+.save-btn {
+  min-width: 64px;
+  border: 1px solid rgba(31, 111, 235, 0.65);
+  background: rgba(31, 111, 235, 0.12);
+  color: #dbeafe;
+  border-radius: 6px;
+  padding: 0.28rem 0.45rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-align: center;
+}
+
 .clear-btn:hover {
   border-color: #8b949e7a;
   color: var(--text);
+}
+
+.save-btn:hover:not(:disabled) {
+  border-color: #1f6feb;
+  background: rgba(31, 111, 235, 0.2);
+}
+
+.save-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
 }
 
 .clear-confirm {
@@ -331,6 +356,14 @@ p {
 .text-tools {
   margin-top: 0.75rem;
   width: 100%;
+}
+
+.plan-status {
+  align-self: flex-end;
+  margin-top: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: right;
 }
 
 .text-tools label {
