@@ -66,6 +66,9 @@ export class App implements OnInit {
   };
 
   readonly today = new Date();
+  readonly heroBeforeCells = App.buildNoiseCells(App.WEEKS);
+  readonly heroAfterCells = App.buildTextCells('BTC', App.WEEKS);
+  readonly btcMiniCells = App.buildTextCells('BTC', 24);
 
   selectedYear = this.today.getFullYear();
   monthLabels: string[] = [];
@@ -89,6 +92,68 @@ export class App implements OnInit {
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
   private planLoadRequestId = 0;
+
+  private static buildNoiseCells(columns: number): boolean[] {
+    return Array.from({ length: columns * App.DAYS }, (_, index) => {
+      const col = index % columns;
+      const row = Math.floor(index / columns);
+      return (col * 3 + row * 11) % 37 === 0 || (col + row * 5) % 53 === 0;
+    });
+  }
+
+  private static buildTextCells(text: string, columns: number): boolean[] {
+    const cells = Array.from({ length: columns * App.DAYS }, () => false);
+    let cursor = Math.max(0, Math.floor((columns - App.measureStaticTextColumns(text)) / 2));
+
+    for (let index = 0; index < text.length; index += 1) {
+      const char = text[index];
+      const glyph = App.FONT[char];
+
+      if (!glyph) {
+        cursor += char === ' ' ? 2 : 0;
+        continue;
+      }
+
+      const glyphWidth = glyph[0]?.length ?? 0;
+      for (let row = 0; row < glyph.length; row += 1) {
+        for (let col = 0; col < glyphWidth; col += 1) {
+          if (glyph[row][col] === '1') {
+            const cellIndex = row * columns + cursor + col;
+            if (cellIndex < cells.length) {
+              cells[cellIndex] = true;
+            }
+          }
+        }
+      }
+
+      const hasNext = index < text.length - 1;
+      const next = hasNext ? text[index + 1] : '';
+      cursor += glyphWidth;
+      if (hasNext && next !== ' ') {
+        cursor += 1;
+      }
+    }
+
+    return cells;
+  }
+
+  private static measureStaticTextColumns(text: string): number {
+    let columns = 0;
+
+    for (let index = 0; index < text.length; index += 1) {
+      const char = text[index];
+      const glyph = App.FONT[char];
+      columns += char === ' ' ? 2 : (glyph?.[0]?.length ?? 0);
+
+      const hasNext = index < text.length - 1;
+      const next = hasNext ? text[index + 1] : '';
+      if (hasNext && char !== ' ' && next !== ' ') {
+        columns += 1;
+      }
+    }
+
+    return columns;
+  }
 
   constructor(
     public readonly mainService: MainService,

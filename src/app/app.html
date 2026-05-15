@@ -1,180 +1,368 @@
-<main class="canvas-page">
-  <section class="canvas-card">
-    <header class="canvas-header">
-      <div class="brand-block">
-        <button type="button" class="brand-avatar-btn" (click)="openBrandModal($event)">
-          <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas Avatar" class="brand-avatar" />
-        </button>
-        <div>
-          <h1>{{ headerTitle }}</h1>
-          <p>{{ activeCount }} active pixels in {{ selectedYear }}</p>
-        </div>
-      </div>
+<main class="landing-page">
+  <nav class="site-nav" aria-label="Primary navigation">
+    <a class="nav-brand" href="#top" aria-label="GitHubCanvas home">
+      <img src="/github-canvas-avatar.jpg" alt="" class="nav-logo" />
+      <span>GitHub<span>Canvas</span></span>
+    </a>
 
-      <div class="auth-block">
-        <button
-          *ngIf="!currentUser"
-          type="button"
-          class="sign-in-btn"
-          [disabled]="showAuthSpinner"
-          (click)="signIn()"
-        >
-          <span *ngIf="!showAuthSpinner">Sign In</span>
+    <div class="nav-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#live-demo">Demo</a>
+    </div>
+
+    <button
+      *ngIf="!currentUser"
+      type="button"
+      class="nav-sign-in"
+      [disabled]="showAuthSpinner"
+      (click)="signIn()"
+    >
+      <span *ngIf="!showAuthSpinner">Sign in with GitHub</span>
+      <span *ngIf="showAuthSpinner" class="btn-spinner"></span>
+    </button>
+
+    <div *ngIf="currentUser" class="user-menu-wrap">
+      <button
+        type="button"
+        class="user-pill"
+        [disabled]="showAuthSpinner"
+        (click)="toggleUserMenu($event)"
+        [attr.aria-expanded]="showUserMenu"
+        aria-haspopup="menu"
+      >
+        <img [src]="menuAvatarSrc" [alt]="menuAvatarAlt" class="user-pill-avatar" />
+        <span>{{ currentUser.login }}</span>
+        <span *ngIf="showAuthSpinner" class="btn-spinner small"></span>
+      </button>
+
+      <div *ngIf="showUserMenu" class="user-dropdown" (click)="$event.stopPropagation()">
+        <div class="user-dropdown-label">{{ currentUser.login }}</div>
+        <button type="button" class="dropdown-item danger" (click)="logOut()">Log Out</button>
+      </div>
+    </div>
+  </nav>
+
+  <section id="top" class="hero-section">
+    <div class="hero-copy">
+      <p class="eyebrow">GitHub profile art, without hand-placing commits</p>
+      <h1>Turn your GitHub contribution graph into pixel art.</h1>
+      <p class="hero-subtitle">
+        Type words like BTC, build a logo, or sketch a pattern. GitHubCanvas turns it into a
+        contribution plan your profile can publish over time.
+      </p>
+
+      <div class="hero-actions">
+        <a class="primary-cta" href="#live-demo">Try Demo</a>
+        <button type="button" class="secondary-cta" [disabled]="showAuthSpinner" (click)="signIn()">
+          <span *ngIf="!showAuthSpinner">Sign in with GitHub</span>
           <span *ngIf="showAuthSpinner" class="btn-spinner"></span>
         </button>
+      </div>
 
-        <div *ngIf="currentUser" class="user-menu-wrap">
-          <button
-            type="button"
-            class="user-pill"
-            [disabled]="showAuthSpinner"
-            (click)="toggleUserMenu($event)"
-            [attr.aria-expanded]="showUserMenu"
-            aria-haspopup="menu"
-          >
-            <img [src]="menuAvatarSrc" [alt]="menuAvatarAlt" class="user-pill-avatar" />
-            <span *ngIf="showAuthSpinner" class="btn-spinner small"></span>
-          </button>
+      <div class="trust-line">
+        <span class="avatar-stack">
+          <img src="/github-canvas-avatar.jpg" alt="" />
+          <img src="/github-canvas-avatar.jpg" alt="" />
+          <img src="/github-canvas-avatar.jpg" alt="" />
+        </span>
+        <span>Built for developers who want their profile to say something.</span>
+      </div>
+    </div>
 
-          <div *ngIf="showUserMenu" class="user-dropdown" (click)="$event.stopPropagation()">
-            <div class="user-dropdown-label">{{ currentUser.login }}</div>
-            <button type="button" class="dropdown-item danger" (click)="logOut()">Log Out</button>
-          </div>
+    <div class="hero-visual" aria-label="Before and after contribution graph preview">
+      <div class="graph-preview before-preview">
+        <div class="graph-heading">
+          <strong>Before</strong>
+          <span>yourusername</span>
+        </div>
+        <div class="mini-months" aria-hidden="true">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span
+          ><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span
+          ><span>Nov</span><span>Dec</span>
+        </div>
+        <div class="mini-grid is-before" aria-hidden="true">
+          <span *ngFor="let cell of heroBeforeCells; let index = index" [class.on]="cell"></span>
         </div>
       </div>
-    </header>
 
-    <section class="left-panel">
-      <section class="grid-shell" aria-label="Contribution canvas" style="margin-top: 10px">
-        <div class="month-track" aria-hidden="true">
-          <span class="month-cell" *ngFor="let label of monthLabels; trackBy: trackByWeek">{{
-            label
-          }}</span>
+      <div class="visual-arrow" aria-hidden="true">&darr;</div>
+
+      <div class="graph-preview after-preview">
+        <div class="graph-heading">
+          <strong>After</strong>
+          <span>yourusername</span>
+        </div>
+        <div class="mini-months" aria-hidden="true">
+          <span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span
+          ><span>Jun</span><span>Jul</span><span>Aug</span><span>Sep</span><span>Oct</span
+          ><span>Nov</span><span>Dec</span>
+        </div>
+        <div class="mini-grid is-after" aria-hidden="true">
+          <span *ngFor="let cell of heroAfterCells; let index = index" [class.on]="cell"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="how-it-works" class="how-section">
+    <div class="section-heading">
+      <p class="eyebrow">How it works</p>
+      <h2>From idea to contribution graph in three steps.</h2>
+    </div>
+
+    <div class="steps-grid">
+      <article class="step-card">
+        <div class="step-label"><span>1</span> Design your graph</div>
+        <div class="step-art design-art" aria-hidden="true">
+          <div class="tool-rail"><span>T</span><span>Sq</span><span>Dr</span><span>Px</span></div>
+          <div class="btc-mini">
+            <span *ngFor="let cell of btcMiniCells" [class.on]="cell"></span>
+          </div>
+        </div>
+        <p>Type BTC, your handle, a tiny logo, or any pattern you want to see on your profile.</p>
+      </article>
+
+      <article class="step-card">
+        <div class="step-label"><span>2</span> Publish to GitHub</div>
+        <div class="step-art repo-art" aria-hidden="true">
+          <div class="repo-header">
+            <strong>github-canvas-2026</strong>
+            <span>public</span>
+          </div>
+          <div class="repo-row"><span>.github/workflows</span><strong>ok</strong></div>
+          <div class="repo-row"><span>script</span><strong>ok</strong></div>
+          <div class="repo-row"><span>data/plan.json</span><strong>ok</strong></div>
+          <div class="repo-row"><span>README.md</span><strong>ok</strong></div>
+        </div>
+        <p>Sign in, save your design, and let GitHubCanvas prepare the publish path.</p>
+      </article>
+
+      <article class="step-card">
+        <div class="step-label"><span>3</span> Your graph updates</div>
+        <div class="step-art update-art" aria-hidden="true">
+          <div class="commit-card">
+            <span>github-canvas</span>
+            <strong>Updated today</strong>
+          </div>
+          <div class="btc-mini is-faded">
+            <span *ngFor="let cell of btcMiniCells" [class.on]="cell"></span>
+          </div>
+        </div>
+        <p>Automated commits fill the contribution graph over time, so the design comes to life.</p>
+      </article>
+    </div>
+  </section>
+
+  <section id="live-demo" class="demo-section">
+    <div class="section-heading">
+      <p class="eyebrow">Live Demo</p>
+      <h2>Try the editor before you publish.</h2>
+      <p>No signup required to play. Sign in only when you are ready to save.</p>
+    </div>
+
+    <section class="canvas-card">
+      <header class="canvas-header">
+        <div class="brand-block">
+          <button type="button" class="brand-avatar-btn" (click)="openBrandModal($event)">
+            <img src="/github-canvas-avatar.jpg" alt="GitHub Canvas Avatar" class="brand-avatar" />
+          </button>
+          <div>
+            <h3>{{ headerTitle }}</h3>
+            <p>{{ activeCount }} active pixels in {{ selectedYear }}</p>
+          </div>
         </div>
 
-        <div class="grid-layout">
-          <div class="day-track" aria-hidden="true">
-            <span>Sun</span>
-            <span>Mon</span>
-            <span>Tue</span>
-            <span>Wed</span>
-            <span>Thu</span>
-            <span>Fri</span>
-            <span>Sat</span>
-          </div>
-
-          <div
-            class="week-track"
-            role="grid"
-            [attr.aria-label]="'Contribution grid for ' + selectedYear"
+        <div class="auth-block">
+          <button
+            *ngIf="!currentUser"
+            type="button"
+            class="sign-in-btn"
+            [disabled]="showAuthSpinner"
+            (click)="signIn()"
           >
-            <div class="week-column" *ngFor="let week of weeks; trackBy: trackByWeek">
-              <button
-                *ngFor="let cell of week; trackBy: trackByDay"
-                type="button"
-                class="pixel"
-                [class.is-empty]="!cell.inYear"
-                [class.is-active]="cell.active"
-                [disabled]="!cell.inYear"
-                (mousedown)="onCellMouseDown($event, cell)"
-                (mouseenter)="onCellMouseEnter(cell)"
-                (keydown.enter)="toggleCell(cell)"
-                [attr.aria-label]="cell.iso + (cell.active ? ' active' : ' inactive')"
-              ></button>
+            <span *ngIf="!showAuthSpinner">Sign In</span>
+            <span *ngIf="showAuthSpinner" class="btn-spinner"></span>
+          </button>
+
+          <div *ngIf="currentUser" class="user-menu-wrap">
+            <button
+              type="button"
+              class="user-pill"
+              [disabled]="showAuthSpinner"
+              (click)="toggleUserMenu($event)"
+              [attr.aria-expanded]="showUserMenu"
+              aria-haspopup="menu"
+            >
+              <img [src]="menuAvatarSrc" [alt]="menuAvatarAlt" class="user-pill-avatar" />
+              <span *ngIf="showAuthSpinner" class="btn-spinner small"></span>
+            </button>
+
+            <div *ngIf="showUserMenu" class="user-dropdown" (click)="$event.stopPropagation()">
+              <div class="user-dropdown-label">{{ currentUser.login }}</div>
+              <button type="button" class="dropdown-item danger" (click)="logOut()">Log Out</button>
             </div>
           </div>
         </div>
-      </section>
+      </header>
 
-      <div class="clear-actions">
-        <div class="clear-buttons">
-          <button
-            *ngIf="!showClearConfirm"
-            type="button"
-            class="clear-btn"
-            (click)="requestClearYear()"
-          >
-            Clear
-          </button>
+      <section class="left-panel">
+        <section class="grid-shell" aria-label="Contribution canvas">
+          <div class="month-track" aria-hidden="true">
+            <span class="month-cell" *ngFor="let label of monthLabels; trackBy: trackByWeek">{{
+              label
+            }}</span>
+          </div>
 
-          <button type="button" class="clear-btn" (click)="selectCurrentYear()">
-            Current Year
-          </button>
+          <div class="grid-layout">
+            <div class="day-track" aria-hidden="true">
+              <span>Sun</span>
+              <span>Mon</span>
+              <span>Tue</span>
+              <span>Wed</span>
+              <span>Thu</span>
+              <span>Fri</span>
+              <span>Sat</span>
+            </div>
 
-          <button
-            type="button"
-            class="save-btn"
-            [disabled]="!currentUser || isSavingPlan || isLoadingPlan"
-            (click)="saveCurrentPlan()"
-          >
-            {{ saveButtonLabel }}
-          </button>
-        </div>
+            <div
+              class="week-track"
+              role="grid"
+              [attr.aria-label]="'Contribution grid for ' + selectedYear"
+            >
+              <div class="week-column" *ngFor="let week of weeks; trackBy: trackByWeek">
+                <button
+                  *ngFor="let cell of week; trackBy: trackByDay"
+                  type="button"
+                  class="pixel"
+                  [class.is-empty]="!cell.inYear"
+                  [class.is-active]="cell.active"
+                  [disabled]="!cell.inYear"
+                  (mousedown)="onCellMouseDown($event, cell)"
+                  (mouseenter)="onCellMouseEnter(cell)"
+                  (keydown.enter)="toggleCell(cell)"
+                  [attr.aria-label]="cell.iso + (cell.active ? ' active' : ' inactive')"
+                ></button>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        <div *ngIf="showClearConfirm" class="clear-confirm">
-          <span>Clear {{ selectedYear }}?</span>
-          <div class="confirm-buttons">
-            <button type="button" class="confirm-btn is-yes" (click)="confirmClearYear()">
-              Yes
+        <div class="clear-actions">
+          <div class="clear-buttons">
+            <button
+              *ngIf="!showClearConfirm"
+              type="button"
+              class="clear-btn"
+              (click)="requestClearYear()"
+            >
+              Clear
             </button>
-            <button type="button" class="confirm-btn is-no" (click)="cancelClearYear()">No</button>
+
+            <button type="button" class="clear-btn" (click)="selectCurrentYear()">
+              Current Year
+            </button>
+
+            <button
+              type="button"
+              class="save-btn"
+              [disabled]="!currentUser || isSavingPlan || isLoadingPlan"
+              (click)="saveCurrentPlan()"
+            >
+              {{ saveButtonLabel }}
+            </button>
+          </div>
+
+          <div *ngIf="showClearConfirm" class="clear-confirm">
+            <span>Clear {{ selectedYear }}?</span>
+            <div class="confirm-buttons">
+              <button type="button" class="confirm-btn is-yes" (click)="confirmClearYear()">
+                Yes
+              </button>
+              <button type="button" class="confirm-btn is-no" (click)="cancelClearYear()">
+                No
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <p *ngIf="isLoadingPlan || planStatusMessage" class="plan-status">
-        {{ isLoadingPlan ? 'Loading saved plan...' : planStatusMessage }}
-      </p>
+        <p *ngIf="isLoadingPlan || planStatusMessage" class="plan-status">
+          {{ isLoadingPlan ? 'Loading saved plan...' : planStatusMessage }}
+        </p>
 
-      <div class="text-tools">
-        <label for="text-preview">Type Text:</label>
-        <div class="text-input-row">
-          <input
-            #textPreview
-            id="text-preview"
-            type="text"
-            [value]="textInput"
-            (input)="onTextInput(textPreview.value)"
-            placeholder="CODING IS COOL!"
-            spellcheck="false"
-            autocomplete="off"
-          />
-          <button type="button" class="preview-btn" (click)="renderTextPreview()">Preview</button>
+        <div class="text-tools" style="position: relative">
+          <div style="position: absolute; top: -32px; left: -1px; color: red; opacity: 50%">
+            Publish to Github Coming Soon!
+          </div>
+          <label for="text-preview">Type Text:</label>
+          <div class="text-input-row">
+            <input
+              #textPreview
+              id="text-preview"
+              type="text"
+              [value]="textInput"
+              (input)="onTextInput(textPreview.value)"
+              placeholder="CODING IS COOL!"
+              spellcheck="false"
+              autocomplete="off"
+            />
+            <button type="button" class="preview-btn" (click)="renderTextPreview()">Preview</button>
+          </div>
+          <p class="text-hint">A-Z, 0-9, space, !, ? only &middot; {{ textColumnsHint }}</p>
         </div>
-        <p class="text-hint">A-Z, 0-9, space, !, ? only · {{ textColumnsHint }}</p>
-      </div>
+      </section>
+
+      <nav class="year-nav" aria-label="Select year">
+        <button
+          type="button"
+          class="year-step-btn"
+          aria-label="Select next year"
+          (click)="selectNextYear()"
+        >
+          &uarr;
+        </button>
+
+        <button
+          *ngFor="let year of visibleYears; trackBy: trackByYear"
+          type="button"
+          class="year-btn"
+          [class.is-selected]="isYearSelected(year)"
+          (click)="selectYear(year)"
+        >
+          {{ year }}
+        </button>
+
+        <button
+          type="button"
+          class="year-step-btn"
+          aria-label="Select previous year"
+          (click)="selectPreviousYear()"
+        >
+          &darr;
+        </button>
+      </nav>
     </section>
-
-    <nav class="year-nav" aria-label="Select year">
-      <button
-        type="button"
-        class="year-step-btn"
-        aria-label="Select next year"
-        (click)="selectNextYear()"
-      >
-        ▲
-      </button>
-
-      <button
-        *ngFor="let year of visibleYears; trackBy: trackByYear"
-        type="button"
-        class="year-btn"
-        [class.is-selected]="isYearSelected(year)"
-        (click)="selectYear(year)"
-      >
-        {{ year }}
-      </button>
-
-      <button
-        type="button"
-        class="year-step-btn"
-        aria-label="Select previous year"
-        (click)="selectPreviousYear()"
-      >
-        ▼
-      </button>
-    </nav>
   </section>
+
+  <footer class="site-footer">
+    <div>
+      <a class="footer-brand" href="#top">
+        <img src="/github-canvas-avatar.jpg" alt="" />
+        <span>GitHub<span>Canvas</span></span>
+      </a>
+      <p>The easiest way to create beautiful GitHub contribution art.</p>
+    </div>
+
+    <div class="footer-links">
+      <a href="#how-it-works">How it works</a>
+      <a href="#live-demo">Live Demo</a>
+      <button type="button" (click)="signIn()">Sign in</button>
+    </div>
+
+    <div class="footer-note">
+      <strong>Made for developers, by a developer.</strong>
+      <span>&copy; 2026 GitHubCanvas</span>
+    </div>
+  </footer>
 </main>
 
 <div *ngIf="showBrandModal" class="brand-modal-backdrop" (click)="closeBrandModal()">
