@@ -9,6 +9,11 @@ interface ContributionCell {
   active: boolean;
 }
 
+interface DemoPreset {
+  label: string;
+  value: string;
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -69,12 +74,27 @@ export class App implements OnInit {
   readonly heroBeforeCells = App.buildNoiseCells(App.WEEKS);
   readonly heroAfterCells = App.buildTextCells('BTC', App.WEEKS);
   readonly btcMiniCells = App.buildTextCells('BTC', 24);
+  readonly primaryPresets: DemoPreset[] = [
+    { label: 'BTC', value: 'BTC' },
+    { label: 'Bitcoin', value: 'BITCOIN' },
+    { label: 'HODL', value: 'HODL' },
+    { label: 'Coding is cool', value: 'CODING IS COOL!' },
+    { label: '2026', value: '2026' },
+    { label: 'GM', value: 'GM' },
+  ];
+  readonly extraPresets: DemoPreset[] = [
+    { label: 'Build', value: 'BUILD' },
+    { label: 'Ship', value: 'SHIP' },
+    { label: 'Launch', value: 'LAUNCH' },
+    { label: 'Open source', value: 'OPEN SOURCE' },
+  ];
 
   selectedYear = this.today.getFullYear();
   monthLabels: string[] = [];
   weeks: ContributionCell[][] = [];
   showClearConfirm = false;
   showBrandModal = false;
+  showMorePresets = false;
 
   textInput = 'CODING IS COOL!';
 
@@ -208,6 +228,12 @@ export class App implements OnInit {
     return this.buildYearWindow(this.selectedYear);
   }
 
+  get visiblePresets(): DemoPreset[] {
+    return this.showMorePresets
+      ? [...this.primaryPresets, ...this.extraPresets]
+      : this.primaryPresets;
+  }
+
   get saveButtonLabel(): string {
     if (this.isSavingPlan) {
       return 'Saving...';
@@ -287,6 +313,15 @@ export class App implements OnInit {
 
   selectCurrentYear(): void {
     this.selectYear(this.today.getFullYear());
+  }
+
+  applyPreset(preset: DemoPreset): void {
+    this.textInput = this.clampTextToYear(this.sanitizeText(preset.value));
+    this.renderTextPreview();
+  }
+
+  toggleMorePresets(): void {
+    this.showMorePresets = !this.showMorePresets;
   }
 
   saveCurrentPlan(): void {
@@ -408,8 +443,16 @@ export class App implements OnInit {
     return this.selectedYear === year;
   }
 
+  isPresetSelected(preset: DemoPreset): boolean {
+    return this.sanitizeText(preset.value) === this.textInput;
+  }
+
   trackByYear(_index: number, year: number): number {
     return year;
+  }
+
+  trackByPreset(_index: number, preset: DemoPreset): string {
+    return preset.value;
   }
 
   trackByWeek(index: number): number {

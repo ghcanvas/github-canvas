@@ -205,6 +205,25 @@
         </div>
       </header>
 
+      <aside class="presets-panel" aria-label="Demo presets">
+        <div class="presets-title">Presets</div>
+        <div class="presets-list">
+          <button
+            *ngFor="let preset of visiblePresets; trackBy: trackByPreset"
+            type="button"
+            class="preset-btn"
+            [class.is-selected]="isPresetSelected(preset)"
+            (click)="applyPreset(preset)"
+          >
+            {{ preset.label }}
+          </button>
+        </div>
+
+        <button type="button" class="preset-more-btn" (click)="toggleMorePresets()">
+          {{ showMorePresets ? 'View less' : 'View more' }}
+        </button>
+      </aside>
+
       <section class="left-panel">
         <section class="grid-shell" aria-label="Contribution canvas">
           <div class="month-track" aria-hidden="true">

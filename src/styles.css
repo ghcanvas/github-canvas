@@ -24,6 +24,10 @@ app-root {
   --year-btn-active-text: #ffffff;
   --rail-width: 78px;
   --rail-gap: 0.5rem;
+  --demo-cell-size: 12px;
+  --demo-cell-gap: 4px;
+  --demo-day-label-width: 32px;
+  --demo-grid-label-gap: 6px;
 
   display: block;
   min-height: 100vh;
@@ -519,10 +523,10 @@ h3 {
 }
 
 .canvas-card {
-  width: min(1040px, 100%);
+  width: min(1180px, 100%);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) var(--rail-width);
+  grid-template-columns: 128px minmax(0, 1fr) var(--rail-width);
   column-gap: var(--rail-gap);
   row-gap: 0.45rem;
   border: 1px solid var(--panel-border);
@@ -583,8 +587,70 @@ h3 {
   min-height: 40px;
 }
 
-.left-panel {
+.presets-panel {
   grid-column: 1;
+  grid-row: 2;
+  align-self: start;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: rgba(13, 20, 32, 0.78);
+  padding: 0.65rem;
+  min-width: 0;
+}
+
+.presets-title {
+  color: var(--heading);
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.presets-list {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.preset-btn,
+.preset-more-btn {
+  width: 100%;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.preset-btn {
+  min-height: 1.9rem;
+  border: 1px solid rgba(139, 148, 158, 0.32);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text);
+  padding: 0.28rem 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.preset-btn:hover,
+.preset-more-btn:hover {
+  border-color: rgba(240, 246, 252, 0.34);
+  color: var(--heading);
+}
+
+.preset-btn.is-selected {
+  border-color: transparent;
+  background: var(--pixel-on);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(46, 160, 67, 0.22);
+}
+
+.preset-more-btn {
+  margin-top: 0.5rem;
+  border: 0;
+  background: transparent;
+  color: #58a6ff;
+  padding: 0.2rem;
+  font-size: 0.74rem;
+}
+
+.left-panel {
+  grid-column: 2;
   grid-row: 2;
   display: flex;
   flex-direction: column;
@@ -592,7 +658,7 @@ h3 {
 }
 
 .year-nav {
-  grid-column: 2;
+  grid-column: 3;
   grid-row: 2;
   display: flex;
   flex-direction: column;
@@ -661,15 +727,15 @@ h3 {
 
 .month-track {
   display: grid;
-  grid-template-columns: repeat(53, 12px);
-  column-gap: 4px;
-  margin-left: 38px;
+  grid-template-columns: repeat(53, var(--demo-cell-size));
+  column-gap: var(--demo-cell-gap);
+  margin-left: calc(var(--demo-day-label-width) + var(--demo-grid-label-gap));
   margin-bottom: 0.3rem;
   min-width: max-content;
 }
 
 .month-cell {
-  width: 12px;
+  width: var(--demo-cell-size);
   font-size: 0.65rem;
   color: var(--muted);
   white-space: nowrap;
@@ -678,15 +744,15 @@ h3 {
 .grid-layout {
   display: flex;
   align-items: flex-start;
-  gap: 6px;
+  gap: var(--demo-grid-label-gap);
   min-width: max-content;
 }
 
 .day-track {
-  width: 32px;
+  width: var(--demo-day-label-width);
   display: grid;
-  grid-template-rows: repeat(7, 12px);
-  row-gap: 4px;
+  grid-template-rows: repeat(7, var(--demo-cell-size));
+  row-gap: var(--demo-cell-gap);
   font-size: 0.66rem;
   color: var(--muted);
   text-align: right;
@@ -694,24 +760,24 @@ h3 {
 }
 
 .day-track span {
-  line-height: 12px;
+  line-height: var(--demo-cell-size);
 }
 
 .week-track {
   display: grid;
-  grid-template-columns: repeat(53, 12px);
-  column-gap: 4px;
+  grid-template-columns: repeat(53, var(--demo-cell-size));
+  column-gap: var(--demo-cell-gap);
 }
 
 .week-column {
   display: grid;
-  grid-template-rows: repeat(7, 12px);
-  row-gap: 4px;
+  grid-template-rows: repeat(7, var(--demo-cell-size));
+  row-gap: var(--demo-cell-gap);
 }
 
 .pixel {
-  width: 12px;
-  height: 12px;
+  width: var(--demo-cell-size);
+  height: var(--demo-cell-size);
   border: 1px solid rgba(27, 31, 36, 0.65);
   border-radius: 2px;
   background: var(--pixel-off);
@@ -731,6 +797,12 @@ h3 {
 .pixel.is-active {
   background: var(--pixel-on);
   box-shadow: 0 0 0 1px rgba(240, 246, 252, 0.08), 0 0 8px var(--pixel-on-glow);
+}
+
+@media (min-width: 981px) {
+  .grid-shell {
+    overflow-x: hidden;
+  }
 }
 
 .clear-actions {
@@ -1135,9 +1207,34 @@ h3 {
     height: 44px;
   }
 
+  .presets-panel {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    padding: 0.55rem;
+  }
+
+  .presets-list {
+    display: flex;
+    gap: 0.38rem;
+    overflow-x: auto;
+    padding-bottom: 0.1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .preset-btn {
+    width: auto;
+    min-width: 6.4rem;
+    white-space: nowrap;
+  }
+
+  .preset-more-btn {
+    width: auto;
+    margin-top: 0.4rem;
+  }
+
   .left-panel {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
     min-width: 0;
   }
 
@@ -1160,7 +1257,7 @@ h3 {
 
   .year-nav {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 3;
     width: 3.8rem;
     justify-self: end;
     align-self: start;
@@ -1282,6 +1379,16 @@ h3 {
     grid-template-columns: minmax(0, 1fr) 3.45rem;
     column-gap: 0.38rem;
     padding: 0.65rem;
+  }
+
+  .presets-panel {
+    padding: 0.5rem;
+  }
+
+  .preset-btn {
+    min-width: 5.7rem;
+    min-height: 1.75rem;
+    font-size: 0.7rem;
   }
 
   .brand-block {
