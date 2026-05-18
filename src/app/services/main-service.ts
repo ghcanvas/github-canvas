@@ -27,6 +27,23 @@ export interface SaveUserPlanResponse extends UserPlan {
   ok: boolean;
 }
 
+export interface PublishedRepo {
+  id: number;
+  name: string;
+  fullName: string;
+  url: string;
+  defaultBranch: string;
+  private: boolean;
+}
+
+export interface PublishPlanResponse {
+  ok: boolean;
+  status: string;
+  message: string;
+  plan?: UserPlan;
+  repo?: PublishedRepo;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MainService {
   private readonly apiBase = 'https://api.githubcanvas.com';
@@ -63,6 +80,22 @@ export class MainService {
   savePlan(year: number, plan: SaveUserPlanRequest): Observable<SaveUserPlanResponse | null> {
     return this.http
       .put<SaveUserPlanResponse>(`${this.apiBase}/plan/${year}`, plan, { withCredentials: true })
+      .pipe(catchError(() => of(null)));
+  }
+
+  publishPlan(year: number): Observable<PublishPlanResponse | null> {
+    return this.http
+      .post<PublishPlanResponse>(`${this.apiBase}/plans/${year}/publish`, null, {
+        withCredentials: true,
+      })
+      .pipe(catchError(() => of(null)));
+  }
+
+  republishPlan(year: number): Observable<PublishPlanResponse | null> {
+    return this.http
+      .post<PublishPlanResponse>(`${this.apiBase}/plans/${year}/republish`, null, {
+        withCredentials: true,
+      })
       .pipe(catchError(() => of(null)));
   }
 

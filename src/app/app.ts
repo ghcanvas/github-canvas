@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
-import { MainService, AuthUser, UserPlan } from './services/main-service';
+import { MainService, AuthUser, PublishPlanResponse, UserPlan } from './services/main-service';
 
 interface ContributionCell {
   date: Date;
@@ -106,12 +106,16 @@ export class App implements OnInit {
   isLoggingOut = false;
   isLoadingPlan = false;
   isSavingPlan = false;
+  isPublishingPlan = false;
   planStatusMessage = '';
+  publishStatusMessage = '';
+  publishedRepoUrl = '';
 
   private isPainting = false;
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
   private planLoadRequestId = 0;
+  private readonly publishedYears = new Set<number>();
 
   private static buildNoiseCells(columns: number): boolean[] {
     return Array.from({ length: columns * App.DAYS }, (_, index) => {
@@ -242,6 +246,18 @@ export class App implements OnInit {
     return 'Save';
   }
 
+  get publishButtonLabel(): string {
+    if (this.isPublishingPlan) {
+      return this.isSelectedYearPublished ? 'Updating...' : 'Publishing...';
+    }
+
+    return this.isSelectedYearPublished ? 'Update Published Canvas' : 'Publish to GitHub';
+  }
+
+  get isSelectedYearPublished(): boolean {
+    return this.publishedYears.has(this.selectedYear);
+  }
+
   signIn(): void {
     if (this.showAuthSpinner) {
       return;
@@ -299,6 +315,8 @@ export class App implements OnInit {
     this.selectedYear = year;
     this.showClearConfirm = false;
     this.planStatusMessage = '';
+    this.publishStatusMessage = '';
+    this.publishedRepoUrl = '';
     this.hydrateYearFromLocal(year);
     this.loadPlanForYear(year);
   }
@@ -356,6 +374,53 @@ export class App implements OnInit {
       error: () => {
         this.isSavingPlan = false;
         this.planStatusMessage = `Save failed for ${year}.`;
+        this.changeDetectorRef.detectChanges();
+      },
+    });
+  }
+
+  publishCurrentPlan(): void {
+    if (!this.currentUser || this.isPublishingPlan) {
+      this.publishStatusMessage = this.currentUser ? this.publishStatusMessage : 'Sign in to publish.';
+      return;
+    }
+
+    const year = this.selectedYear;
+    const isPublished = this.isSelectedYearPublished;
+    const request = isPublished
+      ? this.mainService.republishPlan(year)
+      : this.mainService.publishPlan(year);
+
+    this.publishStatusMessage = '';
+    this.publishedRepoUrl = '';
+    this.isPublishingPlan = true;
+
+    request.subscribe({
+      next: (response) => {
+        this.isPublishingPlan = false;
+
+        if (year !== this.selectedYear) {
+          this.changeDetectorRef.detectChanges();
+          return;
+        }
+
+        if (!response?.ok) {
+          this.publishStatusMessage = `${isPublished ? 'Update' : 'Publish'} failed for ${year}.`;
+          this.changeDetectorRef.detectChanges();
+          return;
+        }
+
+        this.markYearPublished(year, response);
+        this.changeDetectorRef.detectChanges();
+      },
+      error: () => {
+        this.isPublishingPlan = false;
+        if (year !== this.selectedYear) {
+          this.changeDetectorRef.detectChanges();
+          return;
+        }
+
+        this.publishStatusMessage = `${isPublished ? 'Update' : 'Publish'} failed for ${year}.`;
         this.changeDetectorRef.detectChanges();
       },
     });
@@ -801,6 +866,14 @@ export class App implements OnInit {
     const activeIsos = this.normalizeActiveIsos(plan.activeIsos);
     localStorage.setItem(`${App.STORAGE_PREFIX}${year}`, JSON.stringify(activeIsos));
     localStorage.setItem(`${App.TEXT_PREFIX}${year}`, this.sanitizeText(plan.text ?? ''));
+  }
+
+  private markYearPublished(year: number, response: PublishPlanResponse): void {
+    this.publishedYears.add(year);
+    this.publishedRepoUrl = response.repo?.url ?? '';
+    this.publishStatusMessage = this.publishedRepoUrl
+      ? `Published ${year}: ${this.publishedRepoUrl}`
+      : response.message;
   }
 
   private normalizeActiveIsos(value: string[] | string | null | undefined): string[] {

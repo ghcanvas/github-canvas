@@ -284,10 +284,19 @@
             <button
               type="button"
               class="save-btn"
-              [disabled]="!currentUser || isSavingPlan || isLoadingPlan"
+              [disabled]="!currentUser || isSavingPlan || isPublishingPlan || isLoadingPlan"
               (click)="saveCurrentPlan()"
             >
               {{ saveButtonLabel }}
+            </button>
+
+            <button
+              type="button"
+              class="publish-btn"
+              [disabled]="!currentUser || isPublishingPlan || isSavingPlan || isLoadingPlan"
+              (click)="publishCurrentPlan()"
+            >
+              {{ publishButtonLabel }}
             </button>
           </div>
 
@@ -308,10 +317,17 @@
           {{ isLoadingPlan ? 'Loading saved plan...' : planStatusMessage }}
         </p>
 
+        <p *ngIf="publishStatusMessage" class="publish-status">
+          <ng-container *ngIf="publishedRepoUrl; else publishMessage">
+            Published:
+            <a [href]="publishedRepoUrl" target="_blank" rel="noopener noreferrer">
+              {{ publishedRepoUrl }}
+            </a>
+          </ng-container>
+          <ng-template #publishMessage>{{ publishStatusMessage }}</ng-template>
+        </p>
+
         <div class="text-tools" style="position: relative">
-          <div style="position: absolute; top: -32px; left: -1px; color: red; opacity: 50%">
-            Publish to GitHub Coming Soon!
-          </div>
           <label for="text-preview">Type Text:</label>
           <div class="text-input-row">
             <input

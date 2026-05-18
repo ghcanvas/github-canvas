@@ -823,7 +823,8 @@ h3 {
 }
 
 .clear-btn,
-.save-btn {
+.save-btn,
+.publish-btn {
   min-width: 64px;
   border-radius: 6px;
   padding: 0.28rem 0.45rem;
@@ -843,6 +844,12 @@ h3 {
   color: #dbeafe;
 }
 
+.publish-btn {
+  border: 1px solid rgba(63, 185, 80, 0.7);
+  background: rgba(46, 160, 67, 0.16);
+  color: #d7f8de;
+}
+
 .clear-btn:hover {
   border-color: #8b949e7a;
   color: var(--text);
@@ -853,7 +860,13 @@ h3 {
   background: rgba(31, 111, 235, 0.2);
 }
 
-.save-btn:disabled {
+.publish-btn:hover:not(:disabled) {
+  border-color: #3fb950;
+  background: rgba(46, 160, 67, 0.24);
+}
+
+.save-btn:disabled,
+.publish-btn:disabled {
   opacity: 0.55;
   cursor: default;
 }
@@ -902,6 +915,20 @@ h3 {
   font-size: 0.78rem;
   color: var(--muted);
   text-align: right;
+}
+
+.publish-status {
+  align-self: flex-end;
+  max-width: min(100%, 28rem);
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: #8ddb8c;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.publish-status a {
+  color: #7ee787;
 }
 
 .text-tools {
@@ -1285,11 +1312,13 @@ h3 {
   }
 
   .clear-btn,
-  .save-btn {
+  .save-btn,
+  .publish-btn {
     min-width: 5.8rem;
   }
 
-  .plan-status {
+  .plan-status,
+  .publish-status {
     font-size: 0.72rem;
   }
 
@@ -1436,7 +1465,8 @@ h3 {
   }
 
   .clear-btn,
-  .save-btn {
+  .save-btn,
+  .publish-btn {
     min-width: 5.25rem;
     font-size: 0.78rem;
   }
