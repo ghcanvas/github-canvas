@@ -44,6 +44,27 @@ export interface PublishPlanResponse {
   repo?: PublishedRepo;
 }
 
+export type PublishButtonAction = 'save_first' | 'publish' | 'republish';
+
+export interface PublishButtonState {
+  label: string;
+  enabled: boolean;
+  action: PublishButtonAction;
+  helperText?: string | null;
+}
+
+export interface PublishStatusResponse {
+  ok: boolean;
+  year: number;
+  saved: boolean;
+  published: boolean;
+  repoName: string;
+  repoUrl?: string | null;
+  repo?: PublishedRepo | null;
+  planSummary?: unknown;
+  buttonState: PublishButtonState;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MainService {
   private readonly apiBase = 'https://api.githubcanvas.com';
@@ -94,6 +115,14 @@ export class MainService {
   republishPlan(year: number): Observable<PublishPlanResponse | null> {
     return this.http
       .post<PublishPlanResponse>(`${this.apiBase}/plans/${year}/republish`, null, {
+        withCredentials: true,
+      })
+      .pipe(catchError(() => of(null)));
+  }
+
+  loadPublishStatus(year: number): Observable<PublishStatusResponse | null> {
+    return this.http
+      .get<PublishStatusResponse>(`${this.apiBase}/plans/${year}/publish-status`, {
         withCredentials: true,
       })
       .pipe(catchError(() => of(null)));

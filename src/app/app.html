@@ -293,7 +293,7 @@
             <button
               type="button"
               class="publish-btn"
-              [disabled]="!currentUser || isPublishingPlan || isSavingPlan || isLoadingPlan"
+              [disabled]="isPublishButtonDisabled"
               (click)="publishCurrentPlan()"
             >
               {{ publishButtonLabel }}
@@ -317,7 +317,11 @@
           {{ isLoadingPlan ? 'Loading saved plan...' : planStatusMessage }}
         </p>
 
-        <p *ngIf="publishStatusMessage" class="publish-status">
+        <p
+          *ngIf="publishedRepoUrl || publishStatusMessage"
+          class="publish-status"
+          [class.is-error]="publishStatusTone === 'error'"
+        >
           <ng-container *ngIf="publishedRepoUrl; else publishMessage">
             Published:
             <a [href]="publishedRepoUrl" target="_blank" rel="noopener noreferrer">

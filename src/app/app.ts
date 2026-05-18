@@ -1,6 +1,12 @@
 import { ChangeDetectorRef, Component, HostListener, OnInit } from '@angular/core';
 import { NgFor, NgIf } from '@angular/common';
-import { MainService, AuthUser, PublishPlanResponse, UserPlan } from './services/main-service';
+import {
+  MainService,
+  AuthUser,
+  PublishButtonState,
+  PublishPlanResponse,
+  UserPlan,
+} from './services/main-service';
 
 interface ContributionCell {
   date: Date;
@@ -107,15 +113,18 @@ export class App implements OnInit {
   isLoadingPlan = false;
   isSavingPlan = false;
   isPublishingPlan = false;
+  isLoadingPublishStatus = false;
   planStatusMessage = '';
   publishStatusMessage = '';
+  publishStatusTone: 'normal' | 'error' = 'normal';
   publishedRepoUrl = '';
+  publishButtonState: PublishButtonState | null = null;
 
   private isPainting = false;
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
   private planLoadRequestId = 0;
-  private readonly publishedYears = new Set<number>();
+  private publishStatusRequestId = 0;
 
   private static buildNoiseCells(columns: number): boolean[] {
     return Array.from({ length: columns * App.DAYS }, (_, index) => {
@@ -248,14 +257,21 @@ export class App implements OnInit {
 
   get publishButtonLabel(): string {
     if (this.isPublishingPlan) {
-      return this.isSelectedYearPublished ? 'Updating...' : 'Publishing...';
+      return this.publishButtonState?.action === 'republish' ? 'Updating...' : 'Publishing...';
     }
 
-    return this.isSelectedYearPublished ? 'Update Published Canvas' : 'Publish to GitHub';
+    return this.publishButtonState?.label ?? 'Publish to GitHub';
   }
 
-  get isSelectedYearPublished(): boolean {
-    return this.publishedYears.has(this.selectedYear);
+  get isPublishButtonDisabled(): boolean {
+    return (
+      !this.currentUser ||
+      this.isPublishingPlan ||
+      this.isSavingPlan ||
+      this.isLoadingPlan ||
+      this.isLoadingPublishStatus ||
+      !this.publishButtonState?.enabled
+    );
   }
 
   signIn(): void {
@@ -316,8 +332,11 @@ export class App implements OnInit {
     this.showClearConfirm = false;
     this.planStatusMessage = '';
     this.publishStatusMessage = '';
+    this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
+    this.publishButtonState = null;
     this.hydrateYearFromLocal(year);
+    this.loadPublishStatusForYear(year);
     this.loadPlanForYear(year);
   }
 
@@ -369,6 +388,7 @@ export class App implements OnInit {
 
         this.persistRemotePlanLocally(year, plan);
         this.planStatusMessage = `Saved ${year}.`;
+        this.loadPublishStatusForYear(year);
         this.changeDetectorRef.detectChanges();
       },
       error: () => {
@@ -382,16 +402,27 @@ export class App implements OnInit {
   publishCurrentPlan(): void {
     if (!this.currentUser || this.isPublishingPlan) {
       this.publishStatusMessage = this.currentUser ? this.publishStatusMessage : 'Sign in to publish.';
+      this.publishStatusTone = this.currentUser ? this.publishStatusTone : 'error';
       return;
     }
 
     const year = this.selectedYear;
-    const isPublished = this.isSelectedYearPublished;
-    const request = isPublished
-      ? this.mainService.republishPlan(year)
-      : this.mainService.publishPlan(year);
+    const action = this.publishButtonState?.action;
+
+    if (!this.publishButtonState?.enabled || action === 'save_first') {
+      this.publishStatusMessage =
+        this.publishButtonState?.helperText ?? 'Save this year before publishing.';
+      this.publishStatusTone = 'normal';
+      return;
+    }
+
+    const request =
+      action === 'republish'
+        ? this.mainService.republishPlan(year)
+        : this.mainService.publishPlan(year);
 
     this.publishStatusMessage = '';
+    this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
     this.isPublishingPlan = true;
 
@@ -405,12 +436,13 @@ export class App implements OnInit {
         }
 
         if (!response?.ok) {
-          this.publishStatusMessage = `${isPublished ? 'Update' : 'Publish'} failed for ${year}.`;
+          this.publishStatusMessage = `${action === 'republish' ? 'Update' : 'Publish'} failed for ${year}.`;
+          this.publishStatusTone = 'error';
           this.changeDetectorRef.detectChanges();
           return;
         }
 
-        this.markYearPublished(year, response);
+        this.handlePublishSuccess(year, response);
         this.changeDetectorRef.detectChanges();
       },
       error: () => {
@@ -420,7 +452,8 @@ export class App implements OnInit {
           return;
         }
 
-        this.publishStatusMessage = `${isPublished ? 'Update' : 'Publish'} failed for ${year}.`;
+        this.publishStatusMessage = `${action === 'republish' ? 'Update' : 'Publish'} failed for ${year}.`;
+        this.publishStatusTone = 'error';
         this.changeDetectorRef.detectChanges();
       },
     });
@@ -816,6 +849,7 @@ export class App implements OnInit {
     if (!this.currentUser) {
       this.isLoadingPlan = false;
       this.planStatusMessage = '';
+      this.resetPublishStatus();
       return;
     }
 
@@ -833,12 +867,14 @@ export class App implements OnInit {
 
         if (!plan) {
           this.planStatusMessage = '';
+          this.loadPublishStatusForYear(year);
           this.changeDetectorRef.detectChanges();
           return;
         }
 
         this.applyRemotePlan(year, plan);
         this.planStatusMessage = `Loaded saved plan for ${year}.`;
+        this.loadPublishStatusForYear(year);
         this.changeDetectorRef.detectChanges();
       },
       error: () => {
@@ -848,6 +884,56 @@ export class App implements OnInit {
 
         this.isLoadingPlan = false;
         this.planStatusMessage = '';
+        this.loadPublishStatusForYear(year);
+        this.changeDetectorRef.detectChanges();
+      },
+    });
+  }
+
+  private loadPublishStatusForYear(year: number): void {
+    if (!this.currentUser) {
+      this.resetPublishStatus();
+      return;
+    }
+
+    const requestId = ++this.publishStatusRequestId;
+    this.isLoadingPublishStatus = true;
+
+    this.mainService.loadPublishStatus(year).subscribe({
+      next: (status) => {
+        if (requestId !== this.publishStatusRequestId || year !== this.selectedYear) {
+          return;
+        }
+
+        this.isLoadingPublishStatus = false;
+
+        if (!status?.ok) {
+          this.publishButtonState = null;
+          this.publishedRepoUrl = '';
+          this.publishStatusMessage = 'Could not load publish status.';
+          this.publishStatusTone = 'error';
+          this.changeDetectorRef.detectChanges();
+          return;
+        }
+
+        this.publishButtonState = status.buttonState;
+        this.publishedRepoUrl = status.repoUrl ?? status.repo?.url ?? '';
+        this.publishStatusMessage = this.publishedRepoUrl
+          ? ''
+          : (status.buttonState.helperText ?? '');
+        this.publishStatusTone = 'normal';
+        this.changeDetectorRef.detectChanges();
+      },
+      error: () => {
+        if (requestId !== this.publishStatusRequestId || year !== this.selectedYear) {
+          return;
+        }
+
+        this.isLoadingPublishStatus = false;
+        this.publishButtonState = null;
+        this.publishedRepoUrl = '';
+        this.publishStatusMessage = 'Could not load publish status.';
+        this.publishStatusTone = 'error';
         this.changeDetectorRef.detectChanges();
       },
     });
@@ -868,12 +954,21 @@ export class App implements OnInit {
     localStorage.setItem(`${App.TEXT_PREFIX}${year}`, this.sanitizeText(plan.text ?? ''));
   }
 
-  private markYearPublished(year: number, response: PublishPlanResponse): void {
-    this.publishedYears.add(year);
+  private handlePublishSuccess(year: number, response: PublishPlanResponse): void {
     this.publishedRepoUrl = response.repo?.url ?? '';
     this.publishStatusMessage = this.publishedRepoUrl
       ? `Published ${year}: ${this.publishedRepoUrl}`
       : response.message;
+    this.publishStatusTone = 'normal';
+    this.loadPublishStatusForYear(year);
+  }
+
+  private resetPublishStatus(): void {
+    this.isLoadingPublishStatus = false;
+    this.publishButtonState = null;
+    this.publishStatusMessage = '';
+    this.publishStatusTone = 'normal';
+    this.publishedRepoUrl = '';
   }
 
   private normalizeActiveIsos(value: string[] | string | null | undefined): string[] {

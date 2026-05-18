@@ -931,6 +931,10 @@ h3 {
   color: #7ee787;
 }
 
+.publish-status.is-error {
+  color: #ff7b72;
+}
+
 .text-tools {
   margin-top: 0.75rem;
   width: 100%;
