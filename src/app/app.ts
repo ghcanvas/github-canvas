@@ -121,6 +121,7 @@ export class App implements OnInit {
   publishedRepoUrl = '';
   publishButtonState: PublishButtonState | null = null;
   hasUnsavedPlanChanges = false;
+  hasUnpublishedSavedChanges = false;
 
   private isPainting = false;
   private paintValue: boolean | null = null;
@@ -290,21 +291,34 @@ export class App implements OnInit {
   }
 
   get effectivePublishButtonState(): PublishButtonState | null {
-    if (!this.currentUser || !this.hasUnsavedPlanChanges || this.isLoadingPlan) {
+    if (!this.currentUser || this.isLoadingPlan) {
       return this.publishButtonState;
     }
 
-    const helperText =
-      this.publishButtonState?.action === 'republish'
-        ? 'Save changes before updating published canvas.'
-        : 'Save this year before publishing.';
+    if (this.hasUnsavedPlanChanges) {
+      const helperText =
+        this.publishButtonState?.action === 'republish'
+          ? 'Save changes before updating published canvas.'
+          : 'Save this year before publishing.';
 
-    return {
-      label: 'Save Plan First',
-      enabled: false,
-      action: 'save_first',
-      helperText,
-    };
+      return {
+        label: 'Save Plan First',
+        enabled: false,
+        action: 'save_first',
+        helperText,
+      };
+    }
+
+    if (this.publishButtonState?.action === 'republish' && !this.hasUnpublishedSavedChanges) {
+      return {
+        label: 'Published',
+        enabled: false,
+        action: 'save_first',
+        helperText: null,
+      };
+    }
+
+    return this.publishButtonState;
   }
 
   get effectivePublishStatusMessage(): string {
@@ -369,6 +383,7 @@ export class App implements OnInit {
     this.clearPublishCompletionDelay();
     this.savedPlanSignature = null;
     this.hasUnsavedPlanChanges = false;
+    this.hasUnpublishedSavedChanges = false;
     this.hydrateYearFromLocal(year);
     this.loadPublishStatusForYear(year);
     this.loadPlanForYear(year);
@@ -404,6 +419,7 @@ export class App implements OnInit {
     const year = this.selectedYear;
     const activeIsos = this.getActiveIsos();
     const text = this.textInput;
+    const previousSavedPlanSignature = this.savedPlanSignature;
 
     this.persistYearSelection(year);
     this.persistYearText(year, text);
@@ -421,8 +437,15 @@ export class App implements OnInit {
         }
 
         this.persistRemotePlanLocally(year, plan);
-        this.savedPlanSignature = this.buildPlanSignature(plan.activeIsos, plan.text ?? '');
+        const nextSavedPlanSignature = this.buildPlanSignature(plan.activeIsos, plan.text ?? '');
+        const savedPlanChanged =
+          previousSavedPlanSignature !== null &&
+          nextSavedPlanSignature !== previousSavedPlanSignature;
+
+        this.savedPlanSignature = nextSavedPlanSignature;
         this.hasUnsavedPlanChanges = false;
+        this.hasUnpublishedSavedChanges =
+          this.publishButtonState?.action === 'republish' && savedPlanChanged;
         this.planStatusMessage = `Saved ${year}.`;
         this.loadPublishStatusForYear(year);
         this.changeDetectorRef.detectChanges();
@@ -461,6 +484,7 @@ export class App implements OnInit {
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
     this.clearPublishCompletionDelay();
+    this.hasUnpublishedSavedChanges = false;
     this.isPublishingPlan = true;
 
     request.subscribe({
@@ -991,6 +1015,7 @@ export class App implements OnInit {
     this.persistRemotePlanLocally(year, plan);
     this.savedPlanSignature = this.buildPlanSignature(activeIsos, text);
     this.hasUnsavedPlanChanges = false;
+    this.hasUnpublishedSavedChanges = false;
   }
 
   private persistRemotePlanLocally(year: number, plan: UserPlan): void {
@@ -1016,6 +1041,7 @@ export class App implements OnInit {
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
     this.clearPublishCompletionDelay();
+    this.hasUnpublishedSavedChanges = false;
   }
 
   private startPublishCompletionDelay(year: number, repoUrl: string): void {
