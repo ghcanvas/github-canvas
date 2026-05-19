@@ -128,7 +128,6 @@ export class App implements OnInit {
   private publishStatusRequestId = 0;
   private savedPlanSignature: string | null = null;
   private lastAuthUserKey: string | null = null;
-  private isRefreshingAuthSilently = false;
 
   private static buildNoiseCells(columns: number): boolean[] {
     return Array.from({ length: columns * App.DAYS }, (_, index) => {
@@ -352,16 +351,6 @@ export class App implements OnInit {
   onEscape(): void {
     this.showUserMenu = false;
     this.showBrandModal = false;
-  }
-
-  @HostListener('window:pageshow')
-  onPageShow(): void {
-    this.refreshAuthSilently();
-  }
-
-  @HostListener('window:focus')
-  onWindowFocus(): void {
-    this.refreshAuthSilently();
   }
 
   selectYear(year: number): void {
@@ -616,27 +605,6 @@ export class App implements OnInit {
       error: () => {
         this.isCheckingAuth = false;
         this.changeDetectorRef.detectChanges();
-      },
-    });
-  }
-
-  private refreshAuthSilently(): void {
-    if (
-      !this.currentUser ||
-      this.isSigningIn ||
-      this.isLoggingOut ||
-      this.isRefreshingAuthSilently
-    ) {
-      return;
-    }
-
-    this.isRefreshingAuthSilently = true;
-    this.mainService.loadCurrentUser().subscribe({
-      next: () => {
-        this.isRefreshingAuthSilently = false;
-      },
-      error: () => {
-        this.isRefreshingAuthSilently = false;
       },
     });
   }
