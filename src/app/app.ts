@@ -127,6 +127,8 @@ export class App implements OnInit {
   private planLoadRequestId = 0;
   private publishStatusRequestId = 0;
   private savedPlanSignature: string | null = null;
+  private lastAuthUserKey: string | null = null;
+  private isRefreshingAuthSilently = false;
 
   private static buildNoiseCells(columns: number): boolean[] {
     return Array.from({ length: columns * App.DAYS }, (_, index) => {
@@ -200,12 +202,20 @@ export class App implements OnInit {
 
   ngOnInit(): void {
     this.mainService.currentUser$.subscribe((user) => {
+      const nextUserKey = this.getAuthUserKey(user);
+      const authChanged = nextUserKey !== this.lastAuthUserKey;
+
       this.currentUser = user;
+      this.lastAuthUserKey = nextUserKey;
       this.isCheckingAuth = false;
       this.isSigningIn = false;
       this.isLoggingOut = false;
-      this.hydrateYearFromLocal(this.selectedYear);
-      this.loadPlanForYear(this.selectedYear);
+
+      if (authChanged) {
+        this.hydrateYearFromLocal(this.selectedYear);
+        this.loadPlanForYear(this.selectedYear);
+      }
+
       this.changeDetectorRef.detectChanges();
     });
 
@@ -611,11 +621,28 @@ export class App implements OnInit {
   }
 
   private refreshAuthSilently(): void {
-    if (this.isSigningIn || this.isLoggingOut) {
+    if (
+      !this.currentUser ||
+      this.isSigningIn ||
+      this.isLoggingOut ||
+      this.isRefreshingAuthSilently
+    ) {
       return;
     }
 
-    this.mainService.loadCurrentUser().subscribe();
+    this.isRefreshingAuthSilently = true;
+    this.mainService.loadCurrentUser().subscribe({
+      next: () => {
+        this.isRefreshingAuthSilently = false;
+      },
+      error: () => {
+        this.isRefreshingAuthSilently = false;
+      },
+    });
+  }
+
+  private getAuthUserKey(user: AuthUser | null): string | null {
+    return user ? `${user.id}:${user.sessionId}` : null;
   }
 
   private sanitizeText(raw: string): string {
