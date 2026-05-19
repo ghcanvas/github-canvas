@@ -806,13 +806,12 @@ h3 {
 }
 
 .clear-actions {
-  align-self: flex-end;
+  width: 100%;
   margin-top: 0.32rem;
   display: flex;
-  justify-content: flex-end;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.35rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
 }
 
 .clear-buttons {
@@ -935,8 +934,26 @@ h3 {
   color: #ff7b72;
 }
 
+.year-note {
+  flex: 1 1 24rem;
+  max-width: 44rem;
+  margin: 2.6rem 0 0;
+  border: 1px solid rgba(46, 160, 67, 0.34);
+  border-radius: 8px;
+  background: rgba(46, 160, 67, 0.08);
+  padding: 0.7rem 0.85rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.year-note strong {
+  color: #7ee787;
+  font-weight: 700;
+}
+
 .text-tools {
-  margin-top: 0.75rem;
+  margin-top: 0.55rem;
   width: 100%;
 }
 
