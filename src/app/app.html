@@ -318,17 +318,17 @@
         </p>
 
         <p
-          *ngIf="publishedRepoUrl || publishStatusMessage"
+          *ngIf="publishedRepoUrl || effectivePublishStatusMessage"
           class="publish-status"
           [class.is-error]="publishStatusTone === 'error'"
         >
-          <ng-container *ngIf="publishedRepoUrl; else publishMessage">
+          <ng-container *ngIf="publishedRepoUrl && !effectivePublishStatusMessage; else publishMessage">
             Published:
             <a [href]="publishedRepoUrl" target="_blank" rel="noopener noreferrer">
               {{ publishedRepoUrl }}
             </a>
           </ng-container>
-          <ng-template #publishMessage>{{ publishStatusMessage }}</ng-template>
+          <ng-template #publishMessage>{{ effectivePublishStatusMessage }}</ng-template>
         </p>
 
         <div class="text-tools" style="position: relative">

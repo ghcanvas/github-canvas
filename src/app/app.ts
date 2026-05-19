@@ -119,12 +119,14 @@ export class App implements OnInit {
   publishStatusTone: 'normal' | 'error' = 'normal';
   publishedRepoUrl = '';
   publishButtonState: PublishButtonState | null = null;
+  hasUnsavedPlanChanges = false;
 
   private isPainting = false;
   private paintValue: boolean | null = null;
   private hasPendingPaintChanges = false;
   private planLoadRequestId = 0;
   private publishStatusRequestId = 0;
+  private savedPlanSignature: string | null = null;
 
   private static buildNoiseCells(columns: number): boolean[] {
     return Array.from({ length: columns * App.DAYS }, (_, index) => {
@@ -257,10 +259,10 @@ export class App implements OnInit {
 
   get publishButtonLabel(): string {
     if (this.isPublishingPlan) {
-      return this.publishButtonState?.action === 'republish' ? 'Updating...' : 'Publishing...';
+      return this.effectivePublishButtonState?.action === 'republish' ? 'Updating...' : 'Publishing...';
     }
 
-    return this.publishButtonState?.label ?? 'Publish to GitHub';
+    return this.effectivePublishButtonState?.label ?? 'Publish to GitHub';
   }
 
   get isPublishButtonDisabled(): boolean {
@@ -270,8 +272,34 @@ export class App implements OnInit {
       this.isSavingPlan ||
       this.isLoadingPlan ||
       this.isLoadingPublishStatus ||
-      !this.publishButtonState?.enabled
+      !this.effectivePublishButtonState?.enabled
     );
+  }
+
+  get effectivePublishButtonState(): PublishButtonState | null {
+    if (!this.currentUser || !this.hasUnsavedPlanChanges || this.isLoadingPlan) {
+      return this.publishButtonState;
+    }
+
+    const helperText =
+      this.publishButtonState?.action === 'republish'
+        ? 'Save changes before updating published canvas.'
+        : 'Save this year before publishing.';
+
+    return {
+      label: 'Save Plan First',
+      enabled: false,
+      action: 'save_first',
+      helperText,
+    };
+  }
+
+  get effectivePublishStatusMessage(): string {
+    if (this.currentUser && this.hasUnsavedPlanChanges && !this.isLoadingPlan) {
+      return this.effectivePublishButtonState?.helperText ?? 'Save this year before publishing.';
+    }
+
+    return this.publishStatusMessage;
   }
 
   signIn(): void {
@@ -335,6 +363,8 @@ export class App implements OnInit {
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
     this.publishButtonState = null;
+    this.savedPlanSignature = null;
+    this.hasUnsavedPlanChanges = false;
     this.hydrateYearFromLocal(year);
     this.loadPublishStatusForYear(year);
     this.loadPlanForYear(year);
@@ -387,6 +417,8 @@ export class App implements OnInit {
         }
 
         this.persistRemotePlanLocally(year, plan);
+        this.savedPlanSignature = this.buildPlanSignature(plan.activeIsos, plan.text ?? '');
+        this.hasUnsavedPlanChanges = false;
         this.planStatusMessage = `Saved ${year}.`;
         this.loadPublishStatusForYear(year);
         this.changeDetectorRef.detectChanges();
@@ -407,11 +439,11 @@ export class App implements OnInit {
     }
 
     const year = this.selectedYear;
-    const action = this.publishButtonState?.action;
+    const action = this.effectivePublishButtonState?.action;
 
-    if (!this.publishButtonState?.enabled || action === 'save_first') {
+    if (!this.effectivePublishButtonState?.enabled || action === 'save_first') {
       this.publishStatusMessage =
-        this.publishButtonState?.helperText ?? 'Save this year before publishing.';
+        this.effectivePublishButtonState?.helperText ?? 'Save this year before publishing.';
       this.publishStatusTone = 'normal';
       return;
     }
@@ -466,6 +498,7 @@ export class App implements OnInit {
 
     cell.active = !cell.active;
     this.persistYearSelection(this.selectedYear);
+    this.updateLocalPlanSaveState();
   }
 
   onCellMouseDown(event: MouseEvent, cell: ContributionCell): void {
@@ -502,6 +535,7 @@ export class App implements OnInit {
     this.drawText(this.textInput);
     this.persistYearText(this.selectedYear, this.textInput);
     this.persistYearSelection(this.selectedYear);
+    this.updateLocalPlanSaveState();
   }
 
   requestClearYear(): void {
@@ -515,6 +549,7 @@ export class App implements OnInit {
   confirmClearYear(): void {
     this.setYearCellsActive(false);
     this.persistYearSelection(this.selectedYear);
+    this.updateLocalPlanSaveState();
     this.showClearConfirm = false;
   }
 
@@ -737,6 +772,7 @@ export class App implements OnInit {
   private endPainting(): void {
     if (this.hasPendingPaintChanges) {
       this.persistYearSelection(this.selectedYear);
+      this.updateLocalPlanSaveState();
     }
 
     this.isPainting = false;
@@ -843,6 +879,7 @@ export class App implements OnInit {
     this.weeks = this.buildWeeks(firstGridDay, year, selected);
     const savedText = this.loadYearText(year);
     this.textInput = this.clampTextToYear(this.sanitizeText(savedText));
+    this.updateLocalPlanSaveState();
   }
 
   private loadPlanForYear(year: number): void {
@@ -866,6 +903,8 @@ export class App implements OnInit {
         this.isLoadingPlan = false;
 
         if (!plan) {
+          this.savedPlanSignature = null;
+          this.updateLocalPlanSaveState();
           this.planStatusMessage = '';
           this.loadPublishStatusForYear(year);
           this.changeDetectorRef.detectChanges();
@@ -946,6 +985,8 @@ export class App implements OnInit {
     this.setYearSelection(new Set(activeIsos));
     this.textInput = text;
     this.persistRemotePlanLocally(year, plan);
+    this.savedPlanSignature = this.buildPlanSignature(activeIsos, text);
+    this.hasUnsavedPlanChanges = false;
   }
 
   private persistRemotePlanLocally(year: number, plan: UserPlan): void {
@@ -969,6 +1010,23 @@ export class App implements OnInit {
     this.publishStatusMessage = '';
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
+  }
+
+  private updateLocalPlanSaveState(): void {
+    this.hasUnsavedPlanChanges =
+      this.savedPlanSignature !== null &&
+      this.buildCurrentPlanSignature() !== this.savedPlanSignature;
+  }
+
+  private buildCurrentPlanSignature(): string {
+    return this.buildPlanSignature(this.getActiveIsos(), this.textInput);
+  }
+
+  private buildPlanSignature(activeIsos: string[] | string | null | undefined, text: string): string {
+    return JSON.stringify({
+      activeIsos: this.normalizeActiveIsos(activeIsos).sort(),
+      text: this.sanitizeText(text),
+    });
   }
 
   private normalizeActiveIsos(value: string[] | string | null | undefined): string[] {
