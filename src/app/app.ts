@@ -33,6 +33,7 @@ export class App implements OnInit {
   private static readonly YEAR_WINDOW_RADIUS = 2;
   private static readonly STORAGE_PREFIX = 'github-canvas-year:';
   private static readonly TEXT_PREFIX = 'github-canvas-text-year:';
+  private static readonly PUBLISH_COMPLETION_DELAY_MS = 12000;
 
   private static readonly FONT_START_ROW = 0;
   private static readonly FONT: Record<string, string[]> = {
@@ -128,6 +129,9 @@ export class App implements OnInit {
   private publishStatusRequestId = 0;
   private savedPlanSignature: string | null = null;
   private lastAuthUserKey: string | null = null;
+  private pendingPublishCompletionYear: number | null = null;
+  private pendingPublishedRepoUrl = '';
+  private publishCompletionTimer: ReturnType<typeof window.setTimeout> | null = null;
 
   private static buildNoiseCells(columns: number): boolean[] {
     return Array.from({ length: columns * App.DAYS }, (_, index) => {
@@ -362,6 +366,7 @@ export class App implements OnInit {
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
     this.publishButtonState = null;
+    this.clearPublishCompletionDelay();
     this.savedPlanSignature = null;
     this.hasUnsavedPlanChanges = false;
     this.hydrateYearFromLocal(year);
@@ -455,6 +460,7 @@ export class App implements OnInit {
     this.publishStatusMessage = '';
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
+    this.clearPublishCompletionDelay();
     this.isPublishingPlan = true;
 
     request.subscribe({
@@ -951,8 +957,11 @@ export class App implements OnInit {
         }
 
         this.publishButtonState = status.buttonState;
-        this.publishedRepoUrl = status.repoUrl ?? status.repo?.url ?? '';
-        this.publishStatusMessage = this.publishedRepoUrl
+        const repoUrl = status.repoUrl ?? status.repo?.url ?? '';
+        this.publishedRepoUrl = this.isPublishCompletionPendingForYear(year) ? '' : repoUrl;
+        this.publishStatusMessage = this.isPublishCompletionPendingForYear(year)
+          ? this.publishStatusMessage
+          : this.publishedRepoUrl
           ? ''
           : (status.buttonState.helperText ?? '');
         this.publishStatusTone = 'normal';
@@ -991,9 +1000,10 @@ export class App implements OnInit {
   }
 
   private handlePublishSuccess(year: number, response: PublishPlanResponse): void {
-    this.publishedRepoUrl = response.repo?.url ?? '';
-    this.publishStatusMessage = this.publishedRepoUrl
-      ? `Published ${year}: ${this.publishedRepoUrl}`
+    this.startPublishCompletionDelay(year, response.repo?.url ?? '');
+    this.publishedRepoUrl = '';
+    this.publishStatusMessage = response.repo?.url
+      ? `Publishing ${year} contributions to GitHub...`
       : response.message;
     this.publishStatusTone = 'normal';
     this.loadPublishStatusForYear(year);
@@ -1005,6 +1015,47 @@ export class App implements OnInit {
     this.publishStatusMessage = '';
     this.publishStatusTone = 'normal';
     this.publishedRepoUrl = '';
+    this.clearPublishCompletionDelay();
+  }
+
+  private startPublishCompletionDelay(year: number, repoUrl: string): void {
+    this.clearPublishCompletionDelay();
+
+    if (!repoUrl) {
+      return;
+    }
+
+    this.pendingPublishCompletionYear = year;
+    this.pendingPublishedRepoUrl = repoUrl;
+    this.publishCompletionTimer = window.setTimeout(() => {
+      this.publishCompletionTimer = null;
+
+      if (this.pendingPublishCompletionYear !== this.selectedYear) {
+        this.clearPublishCompletionDelay();
+        return;
+      }
+
+      this.publishedRepoUrl = this.pendingPublishedRepoUrl;
+      this.publishStatusMessage = '';
+      this.publishStatusTone = 'normal';
+      this.clearPublishCompletionDelay();
+      this.loadPublishStatusForYear(year);
+      this.changeDetectorRef.detectChanges();
+    }, App.PUBLISH_COMPLETION_DELAY_MS);
+  }
+
+  private clearPublishCompletionDelay(): void {
+    if (this.publishCompletionTimer) {
+      window.clearTimeout(this.publishCompletionTimer);
+      this.publishCompletionTimer = null;
+    }
+
+    this.pendingPublishCompletionYear = null;
+    this.pendingPublishedRepoUrl = '';
+  }
+
+  private isPublishCompletionPendingForYear(year: number): boolean {
+    return this.pendingPublishCompletionYear === year && !!this.pendingPublishedRepoUrl;
   }
 
   private updateLocalPlanSaveState(): void {
